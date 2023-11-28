@@ -59,11 +59,18 @@ class MapSprite(pygame.sprite.DirtySprite):
         screen_y = (-95 * map_x + 95 * map_y) * scale + center_y
         return screen_x, screen_y
 
+    def is_mouse_over(self):
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_x, mouse_y = mouse_pos
+        rect_x, rect_y = self.rect.x, self.rect.y
+        return self.rect.collidepoint(mouse_pos) and self.mask.get_at((mouse_x-rect_x, mouse_y-rect_y))
+
 
 class BuildingSprite(MapSprite):
     def __init__(self, building):
         super().__init__()
         self.building = building
+        building.connected_sprite = self
 
     def data(self, screen_center, scale):
         return [self.building.type_id, self.building.level, screen_center, scale]

@@ -7,6 +7,7 @@ class Building(metaclass=ABCMeta):
         self.name = name
         self.map_pos = map_pos
         self.type_id = type_id
+        self.connected_sprite = None
         self.level = level
         self.is_upgrading = is_upgrading
         self.left_time = left_time
