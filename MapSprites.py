@@ -10,6 +10,7 @@ for image_path in listdir(building_image_dir):
     building_images[type_id] = image
 
 grass_tile_image = pygame.image.load('./image/grass_tile.png')
+grass_tile_selected_image = pygame.image.load('./image/grass_tile_selected.png')
 building_tile_image = pygame.image.load('./image/building_tile.png')
 
 image_memo = {}
@@ -72,13 +73,13 @@ class BuildingSprite(MapSprite):
         self.building = building
         building.connected_sprite = self
 
-    def data(self, screen_center, scale):
+    def data(self, screen_center, scale, **kwargs):
         return [self.building.type_id, self.building.level, screen_center, scale]
 
-    def memo_id(self, scale):
+    def memo_id(self, scale, **kwargs):
         return f'{self.building.type_id}{self.building.level}_{scale}'
 
-    def create_image(self, scale):
+    def create_image(self, scale, **kwargs):
         base_image = building_images[f'{self.building.type_id}{self.building.level}']
         new_image = pygame.transform.smoothscale_by(base_image, scale)
         return new_image
@@ -91,20 +92,23 @@ class BuildingSprite(MapSprite):
 class TileSprite(MapSprite):
     def __init__(self, map_pos):
         super().__init__()
+        self.is_selected = False
         self.map_pos = map_pos
 
     def data(self, screen_center, scale, **kwargs):
         is_building = kwargs['is_building']
-        return [is_building[self.map_pos], screen_center, scale]
+        return [is_building[self.map_pos], self.is_selected, screen_center, scale]
 
     def memo_id(self, scale, **kwargs):
         is_building = kwargs['is_building']
-        return f'{is_building[self.map_pos]}{scale}'
+        return f'{is_building[self.map_pos]}{self.is_selected}{scale}'
 
     def create_image(self, scale, **kwargs):
         is_building = kwargs['is_building']
         if is_building[self.map_pos]:
             base_image = building_tile_image
+        elif self.is_selected:
+            base_image = grass_tile_selected_image
         else:
             base_image = grass_tile_image
 

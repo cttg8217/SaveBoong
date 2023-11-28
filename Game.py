@@ -21,6 +21,8 @@ base_tile = pygame.image.load('image/building_tile.png')
 
 class Game:
     def __init__(self):
+        self.screen_width = SCREEN_WIDTH
+        self.screen_height = SCREEN_HEIGHT
         self.tile_sprite_group = None
         self.building_sprite_group = None
         self.tile_sprite_dict = None
