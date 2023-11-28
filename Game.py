@@ -1,6 +1,5 @@
 import pygame
 import Town
-import Sprite
 import MapSprites
 import InGameMode
 
@@ -45,7 +44,7 @@ class Game:
         self.screen_center_dx_level = 2
         self.screen_center_dy_level = 2
         self.scale_level = 2
-        in_game_mode = InGamePopup.MapView(self)
+        in_game_mode_controller = InGameMode.InGameModeController(self)
 
         self.building_sprite_dict = {}
         self.tile_sprite_dict = {}
@@ -68,7 +67,7 @@ class Game:
                     self.running = False
 
                 self.handle_map_movement(event)
-                in_game_mode.handle_event(event)
+                in_game_mode_controller.handle_event(event)
 
             self.screen.fill('white')
 
@@ -79,6 +78,9 @@ class Game:
             for building_sprite in self.building_sprite_group:
                 self.building_sprite_group.change_layer(building_sprite, building_sprite.rect.y)
             self.building_sprite_group.draw(self.screen)
+
+            in_game_mode_group = in_game_mode_controller.sprite_group()
+            in_game_mode_group.draw(self.screen)
 
             pygame.display.flip()
             clock.tick(15)
@@ -149,3 +151,29 @@ class Game:
     def scale(self):
         scale = scale_levels[self.scale_level]
         return scale
+
+    def get_building_clicked(self):
+        for building_sprite in reversed(self.building_sprite_group.sprites()):
+            if building_sprite.is_mouse_over():
+                print(building_sprite.building.level)
+                return building_sprite
+
+        for building in self.town.building_list:
+            map_pos = building.map_pos
+            tile_sprite = self.tile_sprite_dict[map_pos]
+            if tile_sprite.is_mouse_over():
+                print(building.level)
+                return self.building_sprite_dict[map_pos]
+
+        return None
+
+    def get_tile_clicked(self):
+        tile_sprite_dict = self.tile_sprite_dict
+        is_building = self.town.is_building
+        for map_pos in tile_sprite_dict.keys():
+            tile_sprite = tile_sprite_dict[map_pos]
+            if not is_building[map_pos] and tile_sprite.is_mouse_over():
+                return tile_sprite
+
+        return None
+
