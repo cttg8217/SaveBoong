@@ -2,6 +2,7 @@ import pygame
 import Town
 import Sprite
 import MapSprites
+import InGamePopup
 
 clock = pygame.time.Clock()
 
@@ -21,6 +22,8 @@ base_tile = pygame.image.load('image/building_tile.png')
 
 class Game:
     def __init__(self):
+        self.tile_sprite_dict = None
+        self.building_sprite_dict = None
         self.town = None
         self.running = False
         self.screen = None
@@ -40,16 +43,21 @@ class Game:
         self.screen_center_dx_level = 2
         self.screen_center_dy_level = 2
         self.scale_level = 2
+        in_game_mode = InGamePopup.MapView(self)
 
+        self.building_sprite_dict = {}
+        self.tile_sprite_dict = {}
         building_sprite_group = pygame.sprite.LayeredDirty()
         tile_sprite_group = pygame.sprite.Group()
 
         for building in self.town.building_list:
             building_sprite = MapSprites.BuildingSprite(building)
+            self.building_sprite_dict[building.map_pos] = building_sprite
             building_sprite.add(building_sprite_group)
 
         for map_pos in self.town.is_building.keys():
             tile_sprite = MapSprites.TileSprite(map_pos)
+            self.tile_sprite_dict[map_pos] = tile_sprite
             tile_sprite.add(tile_sprite_group)
 
         while self.running:
@@ -58,18 +66,17 @@ class Game:
                     self.running = False
 
                 self.handle_map_movement(event)
+                in_game_mode.handle_event(event)
 
             self.screen.fill('white')
 
-            tile_sprite_group.update(is_building=self.town.is_building, screen_center=self.screen_center_pos, scale=self.scale)
+            tile_sprite_group.update(screen_center=self.screen_center_pos, scale=self.scale, is_building=self.town.is_building)
             tile_sprite_group.draw(self.screen)
 
             building_sprite_group.update(screen_center=self.screen_center_pos, scale=self.scale)
             for building_sprite in building_sprite_group:
                 building_sprite_group.change_layer(building_sprite, building_sprite.rect.y)
             building_sprite_group.draw(self.screen)
-
-            print(pygame.time.get_ticks())
 
             pygame.display.flip()
             clock.tick(15)
