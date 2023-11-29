@@ -33,6 +33,14 @@ class Building(metaclass=ABCMeta):
         pass
 
 
+class TownCenter(Building):
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
+        super().__init__('마을 회관', map_pos, 'town_center', level, is_upgrading, left_time)
+
+    def action_second(self):
+        pass
+
+
 class Hospital(Building):
     def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
         super().__init__('병원', map_pos, 'hospital', level, is_upgrading, left_time)
@@ -187,6 +195,10 @@ class Factory(Building):
 
 
 data = {
+    'TownCenter': {
+        'max_level': 1,
+        'total_happiness': [500],
+    },
     'Hospital': {
         'max_level': 4,
         'upgrade_price': [500, 600, 700, 800],

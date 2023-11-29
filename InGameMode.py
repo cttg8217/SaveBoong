@@ -15,14 +15,14 @@ class InGameMenuItem(pygame.sprite.Sprite):
 
 
 class InGameMenu(pygame.sprite.Group):
-    def __init__(self, names, screen_width, screen_height):
+    def __init__(self, names, screen_width, screen_height, level=0):
         super().__init__()
         num_items = len(names)
         total_width = (num_items - 1) * 150
         most_left = screen_width // 2 - total_width // 2
         for i in range(num_items):
             x_pos = most_left + 150 * i
-            menu_item = InGameMenuItem(names[i], center=(x_pos, screen_height * 0.8))
+            menu_item = InGameMenuItem(names[i], center=(x_pos, screen_height * 0.8 - 150 * level))
             menu_item.add(self)
 
     def get_item_selected(self):
@@ -84,23 +84,31 @@ class EmptyTileOptions(InGameMode):
         super().__init__(game)
         self.map_pos = map_pos
 
-        build_button_base_image = pygame.image.load('image/buttons/build.png')
-        build_button_image = pygame.transform.smoothscale_by(build_button_base_image, 0.5)
-
-        self.sprite_group = InGameMenu(['build', 'cancel'], game.screen_width, game.screen_height)
+        self.sprite_group = InGameMenu(['build'], game.screen_width, game.screen_height)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             item_selected = self.sprite_group.get_item_selected()
 
             if item_selected is None:
-                pass
-            elif item_selected == 'build':
-                pass
-                # TODO
-            elif item_selected == 'cancel':
                 self.game.tile_sprite_dict[self.map_pos].is_selected = False
                 return MapView(self.game)
+            elif item_selected == 'build':
+                return Build(self.game, self.map_pos)
 
         return self
 
+
+class Build(InGameMode):
+    def __init__(self, game, map_pos):
+        super().__init__(game)
+        self.map_pos = map_pos
+
+        sprite_group_0 = InGameMenu(['build_house', 'build_hospital', 'build_library', 'build_school'],
+                                    game.screen_width, game.screen_height)
+        sprite_group_1 = InGameMenu(['build_stadium', 'build_hospital', 'build_library', 'build_school'],
+                                    game.screen_width, game.screen_height, level=1)
+        self.sprite_group.add(sprite_group_0, sprite_group_1)
+
+    def handle_event(self, event):
+        return self
