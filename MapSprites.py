@@ -125,3 +125,44 @@ def screen_pos(map_pos, screen_center, scale):
     screen_x = (170 * map_x + 170 * map_y) * scale + center_x
     screen_y = (-95 * map_x + 95 * map_y) * scale + center_y
     return screen_x, screen_y
+
+
+class DataSprite(pygame.sprite.Group):
+    def __init__(self, data_name, font, **kwargs):
+        super().__init__()
+        self.databox_image = DataboxImage(data_name, **kwargs)
+        left_x, mid_y = self.databox_image.rect.midleft
+        self.text_sprite = TextSprite(font, midleft=(left_x+20, mid_y))
+        self.databox_image.add(self)
+        self.text_sprite.add(self)
+
+    def update(self, data):
+        left_x, mid_y = self.databox_image.rect.midleft
+        self.text_sprite.update(data, midleft=(left_x + 20, mid_y))
+
+
+class DataboxImage(pygame.sprite.Sprite):
+    def __init__(self, data_name, **kwargs):
+        super().__init__()
+        base_image = pygame.image.load(f'./image/databoxes/{data_name}.png')
+        self.image = pygame.transform.smoothscale_by(base_image, 0.8)
+        self.rect = self.image.get_rect(**kwargs)
+
+
+class TextSprite(pygame.sprite.Sprite):
+    def __init__(self, font, **kwargs):
+        super().__init__()
+        self.font = font
+        self.data = 0
+        self.image = font.render(str(self.data), False, '#f0e968ff')
+        self.rect = self.image.get_rect(**kwargs)
+
+        self.data_before = 0
+
+    def update(self, data, **kwargs):
+        if self.data_before != data:
+            self.data = data
+            self.image = self.font.render(str(self.data), False, '#f0e968ff')
+            self.rect = self.image.get_rect(**kwargs)
+
+            self.data_before = self.data

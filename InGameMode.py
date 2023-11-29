@@ -35,7 +35,7 @@ class InGameMenu(pygame.sprite.Group):
         most_left = screen_width // 2 - total_width // 2
         for i in range(num_items):
             x_pos = most_left + 150 * i
-            menu_item = InGameMenuItem(names[i], center=(x_pos, screen_height * 0.8 - 150 * level))
+            menu_item = InGameMenuItem(names[i], center=(x_pos, screen_height * 0.8 - 185 * level))
             menu_item.add(self)
 
     def get_item_selected(self):
@@ -119,7 +119,7 @@ class Build(InGameMode):
 
         sprite_group_0 = InGameMenu(['build_house', 'build_hospital', 'build_library', 'build_school'],
                                     game.screen_width, game.screen_height, level=0)
-        sprite_group_1 = InGameMenu(['build_stadium', 'build_hospital', 'build_library', 'build_school'],
+        sprite_group_1 = InGameMenu(['build_stadium', 'build_shop', 'build_library', 'build_school'],
                                     game.screen_width, game.screen_height, level=1)
         self.sprite_group.add(sprite_group_0, sprite_group_1)
 
@@ -134,6 +134,11 @@ class Build(InGameMode):
             if self.game.town.money < build_price:
                 self.game.tile_sprite_dict[self.map_pos].is_selected = False
                 return ErrorScreen(self.game, 'less_money')
+
+            new_building = self.game.town.build(self.map_pos, item_selected)
+            self.game.add_building_sprite(new_building)
+            self.game.tile_sprite_dict[self.map_pos].is_selected = False
+            return MapView(self.game)
 
         return self
 

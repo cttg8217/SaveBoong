@@ -2,6 +2,7 @@ import pygame
 import Town
 import MapSprites
 import InGameMode
+from math import floor
 
 clock = pygame.time.Clock()
 
@@ -15,16 +16,20 @@ SCREEN_HEIGHT = 720
 logo_image = pygame.image.load('image/logo.png')
 new_game_button_image = pygame.image.load('image/new_game_button.png')
 new_game_button_image_larger = pygame.transform.smoothscale_by(new_game_button_image, 1.3)
-base_grass = pygame.image.load('image/grass_tile.png')
-base_tile = pygame.image.load('image/building_tile.png')
 
 
 class Game:
     def __init__(self):
+        self.happiness_data_sprite = None
+        self.boong_data_sprite = None
+        self.population_data_sprite = None
+        self.money_data_sprite = None
+        pygame.init()
         self.screen_width = SCREEN_WIDTH
         self.screen_height = SCREEN_HEIGHT
         self.tile_sprite_group = None
         self.building_sprite_group = None
+        self.data_sprites_group = None
         self.tile_sprite_dict = None
         self.building_sprite_dict = None
         self.town = None
@@ -34,9 +39,9 @@ class Game:
         self.screen_center_dy_level = None
         self.scale_level = None
         self.previous_second = 0
+        self.font = pygame.font.Font('./fonts/CookieRun Regular.otf', 30)
 
     def play(self):
-        pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.running = True
         self.main_menu()
@@ -49,20 +54,8 @@ class Game:
         self.scale_level = 2
         in_game_mode_controller = InGameMode.InGameModeController(self)
 
-        self.building_sprite_dict = {}
-        self.tile_sprite_dict = {}
-        self.building_sprite_group = pygame.sprite.LayeredDirty()
-        self.tile_sprite_group = pygame.sprite.Group()
-
-        for building in self.town.building_list:
-            building_sprite = MapSprites.BuildingSprite(building)
-            self.building_sprite_dict[building.map_pos] = building_sprite
-            building_sprite.add(self.building_sprite_group)
-
-        for map_pos in self.town.is_building.keys():
-            tile_sprite = MapSprites.TileSprite(map_pos)
-            self.tile_sprite_dict[map_pos] = tile_sprite
-            tile_sprite.add(self.tile_sprite_group)
+        self.setup_map_sprites()
+        self.setup_data()
 
         while self.running:
             for event in pygame.event.get():
@@ -76,13 +69,8 @@ class Game:
 
             self.screen.fill('white')
 
-            self.tile_sprite_group.update(screen_center=self.screen_center_pos, scale=self.scale, is_building=self.town.is_building)
-            self.tile_sprite_group.draw(self.screen)
-
-            self.building_sprite_group.update(screen_center=self.screen_center_pos, scale=self.scale)
-            for building_sprite in self.building_sprite_group:
-                self.building_sprite_group.change_layer(building_sprite, building_sprite.rect.y)
-            self.building_sprite_group.draw(self.screen)
+            self.render_map_sprites()
+            self.render_data()
 
             in_game_mode_group = in_game_mode_controller.sprite_group()
             in_game_mode_group.draw(self.screen)
@@ -187,3 +175,54 @@ class Game:
         if time > self.previous_second + 1000:
             self.previous_second = time
             self.town.update_second()
+
+    def add_building_sprite(self, building):
+        building_sprite = MapSprites.BuildingSprite(building)
+        self.building_sprite_dict[building.map_pos] = building_sprite
+        building_sprite.add(self.building_sprite_group)
+
+    def setup_map_sprites(self):
+        self.building_sprite_dict = {}
+        self.tile_sprite_dict = {}
+        self.building_sprite_group = pygame.sprite.LayeredDirty()
+        self.tile_sprite_group = pygame.sprite.Group()
+
+        for building in self.town.building_list:
+            self.add_building_sprite(building)
+
+        for map_pos in self.town.is_building.keys():
+            tile_sprite = MapSprites.TileSprite(map_pos)
+            self.tile_sprite_dict[map_pos] = tile_sprite
+            tile_sprite.add(self.tile_sprite_group)
+
+    def render_map_sprites(self):
+        self.tile_sprite_group.update(screen_center=self.screen_center_pos, scale=self.scale, is_building=self.town.is_building)
+        self.tile_sprite_group.draw(self.screen)
+
+        self.building_sprite_group.update(screen_center=self.screen_center_pos, scale=self.scale)
+        for building_sprite in self.building_sprite_group:
+            self.building_sprite_group.change_layer(building_sprite, building_sprite.rect.y)
+        self.building_sprite_group.draw(self.screen)
+
+    def setup_data(self):
+        self.money_data_sprite = MapSprites.DataSprite('money', self.font, topleft=(10, 10))
+
+        self.population_data_sprite = MapSprites.DataSprite('population', self.font, topleft=(10, 70))
+
+        self.boong_data_sprite = MapSprites.DataSprite('boong', self.font, topleft=(10, 130))
+
+        self.happiness_data_sprite = MapSprites.DataSprite('happiness', self.font, topleft=(10, 190))
+
+    def render_data(self):
+        self.money_data_sprite.update(floor(self.town.money))
+        self.money_data_sprite.draw(self.screen)
+
+        self.population_data_sprite.update(floor(self.town.population))
+        self.population_data_sprite.draw(self.screen)
+
+        self.boong_data_sprite.update(floor(self.town.boong))
+        self.boong_data_sprite.draw(self.screen)
+
+        self.happiness_data_sprite.update(floor(self.town.happiness))
+        self.happiness_data_sprite.draw(self.screen)
+

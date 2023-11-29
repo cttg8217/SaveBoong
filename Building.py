@@ -14,6 +14,9 @@ class Building(metaclass=ABCMeta):
         self.is_upgrading = is_upgrading
         self.left_time = left_time
 
+        self.money = 0
+        self.boong = 0
+
     def set_upgrade(self):
         self.level += 1
         self.is_upgrading = True
@@ -51,6 +54,11 @@ class TownCenter(Building):
         super().__init__('마을 회관', map_pos, 'town_center', level, is_upgrading, left_time)
 
 
+class House(Building):
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
+        super().__init__('집', map_pos, 'house', level, is_upgrading, left_time)
+
+
 class Hospital(Building):
     def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
         super().__init__('병원', map_pos, 'hospital', level, is_upgrading, left_time)
@@ -67,13 +75,8 @@ class School(Building):
         if self.passed_seconds == 60:
             self.passed_seconds = 0
 
-            new_graduates = self.data['graduate_per_min'][self.level - 1]
+            new_graduates = self.data['graduates_per_min'][self.level - 1]
             self.graduates += new_graduates
-
-
-class House(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('집', map_pos, 'house', level, is_upgrading, left_time)
 
 
 class Library(Building):
@@ -89,15 +92,8 @@ class Shop(Building):
         self.passed_seconds = 0
 
     def action_second(self):
-        new_money = self.data['money'][self.level - 1]
-        new_boong = self.data['boong'][self.level - 1]
-
-        self.passed_seconds += 1
-        if self.passed_seconds == 60:
-            self.passed_seconds = 0
-
-            self.money += new_money
-            self.boong += new_boong
+        new_money = self.data['money_per_min'][self.level - 1] / 60
+        self.money += new_money
 
 
 class Stadium(Building):
@@ -107,13 +103,9 @@ class Stadium(Building):
         self.passed_seconds = 0
 
     def action_second(self):
-        new_money = self.data['money'][self.level - 1]
-
-        self.passed_seconds += 1
-        if self.passed_seconds == 60:
-            self.passed_seconds = 0
-
-            self.money += new_money
+        money_per_min = self.data['money_per_min'][self.level - 1]
+        new_money = money_per_min // 60
+        self.money += new_money
 
 
 class Park(Building):
@@ -167,3 +159,13 @@ class Factory(Building):
             if self.production_time_left <= 0:
                 self.is_production_in_progress = False
                 Factory.product_count += self.data['manufacture_count']
+
+
+class WorkCenter(Building):
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
+        super().__init__('일자리 센터', map_pos, 'work_center', level, is_upgrading, left_time)
+
+
+class ArtCenter(Building):
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
+        super().__init__('예술의 전당', map_pos, 'art_center', level, is_upgrading, left_time)
