@@ -74,13 +74,16 @@ class BuildingSprite(MapSprite):
         building.connected_sprite = self
 
     def data(self, screen_center, scale, **kwargs):
-        return [self.building.type_id, self.building.level, screen_center, scale]
+        return [self.building.type_id, self.building.level, self.building.is_upgrading, screen_center, scale]
 
     def memo_id(self, scale, **kwargs):
-        return f'{self.building.type_id}{self.building.level}_{scale}'
+        return f'{self.building.type_id}{self.building.level}{self.building.is_upgrading}_{scale}'
 
     def create_image(self, scale, **kwargs):
-        base_image = building_images[f'{self.building.type_id}{self.building.level}']
+        if self.building.is_upgrading:
+            base_image = building_images['building']
+        else:
+            base_image = building_images[f'{self.building.type_id}{self.building.level}']
         new_image = pygame.transform.smoothscale_by(base_image, scale)
         return new_image
 

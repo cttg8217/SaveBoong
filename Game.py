@@ -33,6 +33,7 @@ class Game:
         self.screen_center_dx_level = None
         self.screen_center_dy_level = None
         self.scale_level = None
+        self.previous_second = 0
 
     def play(self):
         pygame.init()
@@ -70,6 +71,8 @@ class Game:
 
                 self.handle_map_movement(event)
                 in_game_mode_controller.handle_event(event)
+
+            self.town_update()
 
             self.screen.fill('white')
 
@@ -179,3 +182,8 @@ class Game:
 
         return None
 
+    def town_update(self):
+        time = pygame.time.get_ticks()
+        if time > self.previous_second + 1000:
+            self.previous_second = time
+            self.town.update_second()

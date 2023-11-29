@@ -1,5 +1,18 @@
 import pygame
 from abc import *
+from building_data import data
+
+
+class ErrorMessage(pygame.sprite.Sprite):
+    def __init__(self, game, name):
+        super().__init__()
+        self.game = game
+        self.image = pygame.image.load(f'./image/errors/{name}.png')
+        self.rect = self.image.get_rect(center=(game.screen_width // 2, game.screen_height // 2))
+
+    def is_mouse_over(self):
+        mouse_pos = pygame.mouse.get_pos()
+        return self.rect.collidepoint(*mouse_pos)
 
 
 class InGameMenuItem(pygame.sprite.Sprite):
@@ -105,10 +118,41 @@ class Build(InGameMode):
         self.map_pos = map_pos
 
         sprite_group_0 = InGameMenu(['build_house', 'build_hospital', 'build_library', 'build_school'],
-                                    game.screen_width, game.screen_height)
+                                    game.screen_width, game.screen_height, level=0)
         sprite_group_1 = InGameMenu(['build_stadium', 'build_hospital', 'build_library', 'build_school'],
                                     game.screen_width, game.screen_height, level=1)
         self.sprite_group.add(sprite_group_0, sprite_group_1)
 
     def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            item_selected = self.get_item_selected()
+            if item_selected is None:
+                self.game.tile_sprite_dict[self.map_pos].is_selected = False
+                return MapView(self.game)
+
+            build_price = data[item_selected]['upgrade_price'][0]
+            if self.game.town.money < build_price:
+                self.game.tile_sprite_dict[self.map_pos].is_selected = False
+                return ErrorScreen(self.game, 'less_money')
+
+        return self
+
+    def get_item_selected(self):
+        for sprite in self.sprite_group:
+            if sprite.is_mouse_over():
+                return sprite.name[6:]
+
+        return None
+
+
+class ErrorScreen(InGameMode):
+    def __init__(self, game, name):
+        super().__init__(game)
+        self.error_sprite = ErrorMessage(game, name)
+        self.error_sprite.add(self.sprite_group)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            return MapView(self.game)
+
         return self
