@@ -189,20 +189,3 @@ class DataBoxTextSprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(**kwargs)
 
 
-class TextSprite(pygame.sprite.Sprite):
-    def __init__(self, font, **kwargs):
-        super().__init__()
-        self.font = font
-        self.data = 0
-        self.image = font.render(str(self.data), True, '#f0e968ff')
-        self.rect = self.image.get_rect(**kwargs)
-
-        self.data_before = 0
-
-    def update(self, data, **kwargs):
-        if self.data_before != data:
-            self.data = data
-            self.image = self.font.render(str(self.data), True, '#f0e968ff')
-            self.rect = self.image.get_rect(**kwargs)
-
-            self.data_before = self.data
