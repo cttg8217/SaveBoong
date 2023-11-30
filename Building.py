@@ -26,7 +26,7 @@ class Building(metaclass=ABCMeta):
     def update_second(self):
         if self.is_upgrading:
             self.upgrade_second()
-        else:
+        elif not self.is_earthquake:
             self.action_second()
 
     def upgrade_second(self):
@@ -48,6 +48,16 @@ class Building(metaclass=ABCMeta):
         if not self.is_upgrading and 'max_population' in self.data.keys():
             return self.data['max_population'][self.level - 1]
         return 0
+
+    @property
+    def is_available(self):
+        if self.is_upgrading or self.is_earthquake:
+            return False
+        return True
+
+    @property
+    def is_max_level(self):
+        return self.level == self.data['max_level']
 
 
 class TownCenter(Building):

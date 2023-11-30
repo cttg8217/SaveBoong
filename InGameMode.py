@@ -56,14 +56,10 @@ class InGameModeController:
         self.in_game_mode = next_in_game_mode
 
     def update(self):
-        if not self.game.town.earthquake_checked:
-            if self.game.town.earthquake_harm:
-                self.in_game_mode = ErrorScreen(self.game, 'earthquake_fix')
-            else:
-                self.in_game_mode = ErrorScreen(self.game, 'earthquake_safe')
-
-        self.game.town.earthquake_checked = True
-        self.in_game_mode.update()
+        if not isinstance(self.in_game_mode, ErrorScreen):
+            if len(self.game.town.popup_list) != 0:
+                popup_name = self.game.town.popup_list.pop(0)
+                self.in_game_mode = ErrorScreen(self.game, popup_name)
 
     def sprite_group(self):
         return self.in_game_mode.sprite_group
@@ -203,9 +199,14 @@ class BuildingOptions(InGameMode):
         self.building_name_sprite.add(self.sprite_group)
 
         option_names = []
-        is_max_level = (building.level == building_max_level)
-        if not is_max_level:
-            option_names.append('check_upgrade')
+        if self.building.is_available:
+            # TODO: options
+            if not self.building.is_max_level:
+                option_names.append('check_upgrade')
+        if self.building.is_earthquake:
+            option_names.append('fix')
+        option_names.append('info')
+
         self.building_options = InGameMenu(option_names, game.screen_width, game.screen_height)
         self.sprite_group.add(self.building_options)
 
@@ -216,6 +217,8 @@ class BuildingOptions(InGameMode):
             selected_option = self.building_options.get_item_selected()
             if selected_option is None:
                 return MapView(self.game)
-            else:
+            if selected_option == 'fix':
+                pass
+            if selected_option == 'check_upgrade':
                 pass
         return self

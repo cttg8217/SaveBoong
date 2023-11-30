@@ -29,6 +29,8 @@ class Town:
         self.earthquake_checked = True
         self.earthquake_harm = False
 
+        self.popup_list = []
+
     def update_second(self):
         for building in self.building_list:
             building.update_second()
@@ -72,7 +74,7 @@ class Town:
         return self.total_happiness // self.population
 
     def earthquake(self):
-        self.earthquake_harm = False
+        earthquake_harm = False
         for building in self.building_list:
             if building.is_upgrading:
                 continue
@@ -80,6 +82,10 @@ class Town:
                 continue
             if random.random() < earthquake_probability:
                 building.is_earthquake = True
-                self.earthquake_harm = True
+                earthquake_harm = True
 
-        self.earthquake_checked = False
+        if earthquake_harm:
+            self.popup_list.append('earthquake_fix')
+        else:
+            self.popup_list.append('earthquake_safe')
+
