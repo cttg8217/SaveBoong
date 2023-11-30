@@ -2,8 +2,8 @@ import Building
 from building_data import data
 import random
 
-earthquake_probability = 0.1
-earthquake_time = 60
+earthquake_probability = 1
+earthquake_time = 10
 
 
 class Town:
@@ -30,9 +30,12 @@ class Town:
 
         self.earthquake_left_time = earthquake_time
         self.earthquake_checked = True
-        self.earthquake_harm = False
 
         self.popup_list = []
+
+        self.productivity = 1
+        self.build_speed = 1
+        self.repair_price_ratio = 1
 
     def update_second(self):
         for building in self.building_list:
@@ -40,20 +43,41 @@ class Town:
 
         total_happiness = 0
         max_population = 0
+
+        productivity = 1
+        build_speed = 1
+        repair_price = 1
         for building in self.building_list:
             total_happiness += building.total_happiness
             max_population += building.max_population
 
-            self.money += building.money
+            self.money += building.money * self.productivity
             building.money = 0
 
             if building.boong > 0:
                 self.popup_list.append('find_boong')
             self.boong += building.boong
             building.boong = 0
+            if building.level > 0:
+                if 'productivity_increase' in building.data.keys():
+                    productivity += building.data['productivity_increase'][building.level-1]
+
+                if 'build_speed_increase' in building.data.keys():
+                    build_speed += building.data['build_speed_increase'][building.level-1]
+
+                if 'repair_price_reduction' in building.data.keys():
+                    repair_price -= building.data['repair_price_reduction'][building.level-1]
+                    if repair_price <= 0:
+                        repair_price = 0
 
         self.total_happiness = total_happiness
         self.max_population = max_population
+
+        self.productivity = productivity
+        self.build_speed = build_speed
+        self.repair_price_ratio = repair_price
+
+        print(productivity, build_speed, repair_price)
 
         self.earthquake_left_time -= 1
         if self.earthquake_left_time <= 0:
@@ -79,7 +103,7 @@ class Town:
         class_name = data[building_name]['class_name']
         self.money -= build_price
 
-        new_building = eval(f'Building.{class_name}')(map_pos, level=1, is_upgrading=True, left_time=build_time)
+        new_building = eval(f'Building.{class_name}')(map_pos, level=0, is_upgrading=True, left_time=build_time)
 
         self.building_list.append(new_building)
         self.building_map[map_pos] = new_building
@@ -96,7 +120,7 @@ class Town:
         for building in self.building_list:
             if building.is_upgrading:
                 continue
-            if building.type_id == 'town_center':
+            if building.type_id in ['town_center', 'weather_center']:
                 continue
             if random.random() < earthquake_probability:
                 building.is_earthquake = True
@@ -107,3 +131,11 @@ class Town:
         else:
             self.popup_list.append('earthquake_safe')
 
+    def upgrade_building(self, building):
+        self.money -= building.data['upgrade_price'][building.level-1]
+        building.set_upgrade(self.build_speed)
+
+    def repair_building(self, building):
+        repair_cost = self.repair_price_ratio * building.total_price / 5
+        self.money -= repair_cost
+        building.is_earthquake = False

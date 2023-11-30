@@ -46,7 +46,6 @@ data = {
         'upgrade_time': [10, 20, 40, 70],
         'total_happiness': [200, 400, 1000, 2400],
         'money_per_min': [40, 80, 120, 160],
-        'boong_per_min': [0, 0.1, 0.2, 0.3]
     },
     'stadium': {
         'class_name': 'Stadium',
@@ -66,8 +65,8 @@ data = {
     'weather_center': {
         'class_name': 'WeatherCenter',
         'max_level': 2,
-        'upgrade_price': [3000, 4000],
-        'upgrade_time': [150, 210],
+        'upgrade_price': [1, 4000],
+        'upgrade_time': [1, 210],
         'total_happiness': [800, 1200],
         'repair_price_reduction': [0.05, 0.15],
     },
@@ -102,7 +101,7 @@ data = {
         'class_name': 'ArtCenter',
         'max_level': 1,
         'upgrade_price': [10000],
-        'upgrade_time': [3000],
+        'upgrade_time': [300],
         'total_happiness': [10000]
     }
 }

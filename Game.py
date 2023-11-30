@@ -20,24 +20,9 @@ new_game_button_image_larger = pygame.transform.smoothscale_by(new_game_button_i
 
 class Game:
     def __init__(self):
-        self.happiness_data_sprite = None
-        self.boong_data_sprite = None
-        self.population_data_sprite = None
-        self.money_data_sprite = None
         pygame.init()
         self.screen_width = SCREEN_WIDTH
         self.screen_height = SCREEN_HEIGHT
-        self.tile_sprite_group = None
-        self.building_sprite_group = None
-        self.data_sprites_group = None
-        self.tile_sprite_dict = None
-        self.building_sprite_dict = None
-        self.town = None
-        self.running = False
-        self.screen = None
-        self.screen_center_dx_level = None
-        self.screen_center_dy_level = None
-        self.scale_level = None
         self.previous_second = 0
         self.font = pygame.font.Font('./fonts/CookieRun Regular.otf', 30)
 

@@ -1,13 +1,14 @@
 import pygame
 from abc import *
 from building_data import data
+from math import ceil
 
 
-class ErrorMessage(pygame.sprite.Sprite):
+class PopupMessage(pygame.sprite.Sprite):
     def __init__(self, game, name):
         super().__init__()
         self.game = game
-        self.image = pygame.image.load(f'./image/errors/{name}.png')
+        self.image = pygame.image.load(f'./image/popups/{name}.png')
         self.rect = self.image.get_rect(center=(game.screen_width // 2, game.screen_height // 2))
 
     def is_mouse_over(self):
@@ -65,15 +66,15 @@ class CostingConfirmButton(pygame.sprite.Sprite):
         self.name = 'confirm'
 
         self.image = pygame.image.load('./image/buttons/cost_confirm_base.png')
-        self.cost_text = TextSprite(f'돈: {cost}', 20, '#733600')
-        if time >= 60:
-            minutes, seconds = divmod(time, 60)
+        self.cost_text = TextSprite(f'돈: {ceil(cost)}', 20, '#733600')
+        minutes, seconds = divmod(ceil(time), 60)
+        if minutes > 0:
             if seconds == 0:
                 self.time_text = TextSprite(f'시간: {minutes}분', 20, '#733600')
             else:
                 self.time_text = TextSprite(f'시간: {minutes}분 {seconds}초', 20, '#733600')
         else:
-            self.time_text = TextSprite(f'시간: {time}초', 20, '#733600')
+            self.time_text = TextSprite(f'시간: {seconds}초', 20, '#733600')
 
         self.cost_text.rect.center = (66, 25)
         self.time_text.rect.center = (66, 70)
@@ -128,7 +129,7 @@ class InGameModeController:
         self.in_game_mode = next_in_game_mode
 
     def update(self):
-        if not isinstance(self.in_game_mode, ErrorScreen):
+        if isinstance(self.in_game_mode, MapView):
             if len(self.game.town.popup_list) != 0:
                 popup_name = self.game.town.popup_list.pop(0)
                 self.in_game_mode = ErrorScreen(self.game, popup_name)
@@ -241,7 +242,7 @@ class Build(InGameMode):
 class ErrorScreen(InGameMode):
     def __init__(self, game, name):
         super().__init__(game)
-        self.error_sprite = ErrorMessage(game, name)
+        self.error_sprite = PopupMessage(game, name)
         self.error_sprite.add(self.sprite_group)
 
     def handle_event(self, event):
@@ -266,12 +267,14 @@ class CostingConfirmation(InGameMode):
 
 class BuildConfirmation(CostingConfirmation):
     def __init__(self, game, map_pos, type_id):
+        self.game = game
         self.map_pos = map_pos
         self.type_id = type_id
-        card_name1 = f'{type_id}1_card'
-        cost = data[type_id]['upgrade_price'][0]
-        time = data[type_id]['upgrade_time'][0]
-        super().__init__(game, [card_name1], cost, time)
+        card_name = f'{type_id}1_card'
+
+        self.cost = data[type_id]['upgrade_price'][0]
+        time = data[type_id]['upgrade_time'][0] / self.game.town.build_speed
+        super().__init__(game, [card_name], self.cost, time)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -279,13 +282,78 @@ class BuildConfirmation(CostingConfirmation):
             if option_selected is None:
                 return MapView(self.game)
             else:
-                build_price = data[self.type_id]['upgrade_price'][0]
-                if self.game.town.money < build_price:
+                if self.game.town.money < self.cost:
                     return ErrorScreen(self.game, 'less_money')
 
                 new_building = self.game.town.build(self.map_pos, self.type_id)
                 self.game.add_building_sprite(new_building)
                 return MapView(self.game)
+
+        return self
+
+
+class UpgradeConfirmation(CostingConfirmation):
+    def __init__(self, game, building):
+        self.game = game
+        self.building = building
+        self.type_id = building.type_id
+        level = building.level
+
+        self.cost = building.data['upgrade_price'][level]
+        time = building.data['upgrade_time'][level] / self.game.town.build_speed
+
+        card_name1 = f'{self.type_id}{level}_card'
+        card_name2 = f'{self.type_id}{level+1}_card'
+
+        super().__init__(game, [card_name1, card_name2], self.cost, time)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            option_selected = self.options.get_item_selected()
+            if option_selected is None:
+                return MapView(self.game)
+            else:
+                if self.game.town.money < self.cost:
+                    return ErrorScreen(self.game, 'less_money')
+
+                self.game.town.upgrade_building(self.building)
+                return MapView(self.game)
+
+        return self
+
+
+class ShowInfo(InGameMode):
+    def __init__(self, game, building):
+        super().__init__(game)
+        self.building = building
+        card_name = f'{building.type_id}{building.level}_card'
+        card_view = CardView([card_name], self.game.screen_width, self.game.screen_height)
+        self.sprite_group.add(card_view)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            return MapView(self.game)
+
+        return self
+
+
+class FixBuilding(CostingConfirmation):
+    def __init__(self, game, building):
+        self.game = game
+        self.building = building
+        self.cost = self.game.town.repair_price_ratio * building.total_price / 5
+        super().__init__(game, [], self.cost, 0)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            selected_item = self.options.get_item_selected()
+            if selected_item == 'confirm':
+                if self.cost > self.game.town.money:
+                    return ErrorScreen(self.game, 'less_money')
+
+                else:
+                    self.game.town.repair_building(self.building)
+                    return MapView(self.game)
 
         return self
 
@@ -326,8 +394,10 @@ class BuildingOptions(InGameMode):
             selected_option = self.building_options.get_item_selected()
             if selected_option is None:
                 return MapView(self.game)
+            if selected_option == 'info':
+                return ShowInfo(self.game, self.building)
             if selected_option == 'fix':
-                pass
+                return FixBuilding(self.game, self.building)
             if selected_option == 'check_upgrade':
-                pass
+                return UpgradeConfirmation(self.game, self.building)
         return self

@@ -6,7 +6,7 @@ boong_probability = 0.1
 
 
 class Building(metaclass=ABCMeta):
-    def __init__(self, name, map_pos, type_id, level=1, is_upgrading=False, left_time=0):
+    def __init__(self, name, map_pos, type_id, level=0, is_upgrading=False, left_time=0):
         self.data = data[type_id]
         self.name = name
         self.map_pos = map_pos
@@ -20,10 +20,9 @@ class Building(metaclass=ABCMeta):
         self.money = 0
         self.boong = 0
 
-    def set_upgrade(self):
-        self.level += 1
+    def set_upgrade(self, build_speed):
         self.is_upgrading = True
-        self.left_time = data[self.name]['upgrade_time'][self.level - 1]
+        self.left_time = data[self.type_id]['upgrade_time'][self.level - 1] / build_speed
 
     def update_second(self):
         if self.is_upgrading:
@@ -32,11 +31,14 @@ class Building(metaclass=ABCMeta):
             self.action_second()
 
     def upgrade_second(self):
+        print(self.left_time)
         self.left_time -= 1
         if self.left_time <= 0:
             self.is_upgrading = False
             if random.random() < boong_probability:
                 self.boong += 1
+
+            self.level += 1
 
     def action_second(self):
         pass
@@ -62,6 +64,13 @@ class Building(metaclass=ABCMeta):
     @property
     def is_max_level(self):
         return self.level == self.data['max_level']
+
+    @property
+    def total_price(self):
+        total_price = 0
+        for i in range(self.level):
+            total_price += self.data['upgrade_price'][i]
+        return total_price
 
 
 class TownCenter(Building):
