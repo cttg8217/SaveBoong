@@ -193,24 +193,27 @@ class Game:
         self.building_sprite_group.draw(self.screen)
 
     def setup_data(self):
-        self.money_data_sprite = MapSprites.DataSprite('money', self.font, topleft=(10, 10))
+        self.data_sprite_group = pygame.sprite.Group()
 
-        self.population_data_sprite = MapSprites.DataSprite('population', self.font, topleft=(10, 70))
+        self.money_data_sprite = MapSprites.DataSprite(self.town, 'money', 1)
+        self.happiness_data_sprite = MapSprites.DataSprite(self.town, 'happiness', 2)
+        self.boong_data_sprite = MapSprites.DataSprite(self.town, 'boong', 3)
+        self.population_data_sprite = MapSprites.DataSprite(self.town, 'population', 4)
 
-        self.boong_data_sprite = MapSprites.DataSprite('boong', self.font, topleft=(10, 130))
-
-        self.happiness_data_sprite = MapSprites.DataSprite('happiness', self.font, topleft=(10, 190))
+        self.money_data_sprite.add(self.data_sprite_group)
+        self.happiness_data_sprite.add(self.data_sprite_group)
+        self.boong_data_sprite.add(self.data_sprite_group)
+        self.population_data_sprite.add(self.data_sprite_group)
 
     def render_data(self):
-        self.money_data_sprite.update(floor(self.town.money))
+        self.money_data_sprite.update()
         self.money_data_sprite.draw(self.screen)
 
-        self.population_data_sprite.update(floor(self.town.population))
-        self.population_data_sprite.draw(self.screen)
-
-        self.boong_data_sprite.update(floor(self.town.boong))
-        self.boong_data_sprite.draw(self.screen)
-
-        self.happiness_data_sprite.update(floor(self.town.happiness))
+        self.happiness_data_sprite.update()
         self.happiness_data_sprite.draw(self.screen)
 
+        self.boong_data_sprite.update()
+        self.boong_data_sprite.draw(self.screen)
+
+        self.population_data_sprite.update()
+        self.population_data_sprite.draw(self.screen)

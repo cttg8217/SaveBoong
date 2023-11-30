@@ -132,7 +132,7 @@ class InGameModeController:
         if isinstance(self.in_game_mode, MapView):
             if len(self.game.town.popup_list) != 0:
                 popup_name = self.game.town.popup_list.pop(0)
-                self.in_game_mode = ErrorScreen(self.game, popup_name)
+                self.in_game_mode = PopupScreen(self.game, popup_name)
 
     def sprite_group(self):
         return self.in_game_mode.sprite_group
@@ -239,11 +239,11 @@ class Build(InGameMode):
         return None
 
 
-class ErrorScreen(InGameMode):
+class PopupScreen(InGameMode):
     def __init__(self, game, name):
         super().__init__(game)
-        self.error_sprite = PopupMessage(game, name)
-        self.error_sprite.add(self.sprite_group)
+        self.popup_sprite = PopupMessage(game, name)
+        self.popup_sprite.add(self.sprite_group)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -283,7 +283,7 @@ class BuildConfirmation(CostingConfirmation):
                 return MapView(self.game)
             else:
                 if self.game.town.money < self.cost:
-                    return ErrorScreen(self.game, 'less_money')
+                    return PopupScreen(self.game, 'less_money')
 
                 new_building = self.game.town.build(self.map_pos, self.type_id)
                 self.game.add_building_sprite(new_building)
@@ -314,7 +314,7 @@ class UpgradeConfirmation(CostingConfirmation):
                 return MapView(self.game)
             else:
                 if self.game.town.money < self.cost:
-                    return ErrorScreen(self.game, 'less_money')
+                    return PopupScreen(self.game, 'less_money')
 
                 self.game.town.upgrade_building(self.building)
                 return MapView(self.game)
@@ -349,7 +349,7 @@ class FixBuilding(CostingConfirmation):
             selected_item = self.options.get_item_selected()
             if selected_item == 'confirm':
                 if self.cost > self.game.town.money:
-                    return ErrorScreen(self.game, 'less_money')
+                    return PopupScreen(self.game, 'less_money')
 
                 else:
                     self.game.town.repair_building(self.building)

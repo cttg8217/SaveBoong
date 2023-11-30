@@ -1,6 +1,7 @@
 import pygame
 from os import listdir
 from abc import *
+from math import floor
 
 building_images = {}
 building_image_dir = './image/buildings/'
@@ -147,24 +148,44 @@ def screen_pos(map_pos, screen_center, scale):
 
 
 class DataSprite(pygame.sprite.Group):
-    def __init__(self, data_name, font, **kwargs):
+    def __init__(self, town, name, level):
         super().__init__()
-        self.databox_image = DataboxImage(data_name, **kwargs)
-        left_x, mid_y = self.databox_image.rect.midleft
-        self.text_sprite = TextSprite(font, midleft=(left_x+20, mid_y))
-        self.databox_image.add(self)
+        self.town = town
+        self.name = name
+        self.level = level
+
+        self.base_sprite = DataBoxBaseSprite(name, midleft=(20, self.level*50))
+        self.text_sprite = DataBoxTextSprite(name)
+
+        self.base_sprite.add(self)
         self.text_sprite.add(self)
 
-    def update(self, data):
-        left_x, mid_y = self.databox_image.rect.midleft
-        self.text_sprite.update(data, midleft=(left_x + 20, mid_y))
+    def update(self):
+        data = getattr(self.town, self.name)
+        self.text_sprite.update(data, midleft=(140, self.level*50))
+
+    def draw(self, surface):
+        surface.blit(self.base_sprite.image, self.base_sprite.rect)
+        surface.blit(self.text_sprite.image, self.text_sprite.rect)
 
 
-class DataboxImage(pygame.sprite.Sprite):
-    def __init__(self, data_name, **kwargs):
+class DataBoxBaseSprite(pygame.sprite.Sprite):
+    def __init__(self, name, **kwargs):
         super().__init__()
-        base_image = pygame.image.load(f'./image/databoxes/{data_name}.png')
-        self.image = pygame.transform.smoothscale_by(base_image, 0.8)
+        self.image = pygame.image.load(f'./image/databoxes/{name}.png')
+        self.rect = self.image.get_rect(**kwargs)
+
+
+class DataBoxTextSprite(pygame.sprite.Sprite):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+        self.image = None
+        self.rect = None
+        self.font = pygame.font.Font('./fonts/CookieRun Regular.otf', 20)
+
+    def update(self, data, **kwargs):
+        self.image = self.font.render(str(floor(data)), True, '#AA5B00')
         self.rect = self.image.get_rect(**kwargs)
 
 
