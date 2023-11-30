@@ -198,7 +198,7 @@ class Game:
             tile_sprite.add(self.tile_sprite_group)
 
     def render_map_sprites(self):
-        self.tile_sprite_group.update(screen_center=self.screen_center_pos, scale=self.scale, is_building=self.town.is_building)
+        self.tile_sprite_group.update(screen_center=self.screen_center_pos, scale=self.scale, is_building=self.town.is_building, buildable=self.town.buildable)
         self.tile_sprite_group.draw(self.screen)
 
         self.building_sprite_group.update(screen_center=self.screen_center_pos, scale=self.scale)

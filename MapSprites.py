@@ -9,7 +9,9 @@ for image_path in listdir(building_image_dir):
     image = pygame.image.load(building_image_dir + image_path)
     building_images[type_id] = image
 
-grass_tile_image = pygame.image.load('./image/grass_tile.png')
+grass_tile_buildable_image = pygame.image.load('./image/grass_tile.png')
+grass_tile_not_buildable_image = pygame.image.load('./image/grass_tile.png')
+grass_tile_not_buildable_image.set_alpha(200)
 grass_tile_selected_image = pygame.image.load('./image/grass_tile_selected.png')
 building_tile_image = pygame.image.load('./image/building_tile.png')
 
@@ -102,20 +104,26 @@ class TileSprite(MapSprite):
 
     def data(self, screen_center, scale, **kwargs):
         is_building = kwargs['is_building']
-        return [is_building[self.map_pos], self.is_selected, screen_center, scale]
+        buildable = kwargs['buildable']
+        return [buildable[self.map_pos], is_building[self.map_pos], self.is_selected, screen_center, scale]
 
     def memo_id(self, scale, **kwargs):
         is_building = kwargs['is_building']
-        return f'{is_building[self.map_pos]}{self.is_selected}{scale}'
+        buildable = kwargs['buildable']
+        return f'{buildable[self.map_pos]}{is_building[self.map_pos]}{self.is_selected}{scale}'
 
     def create_image(self, scale, **kwargs):
         is_building = kwargs['is_building']
+        buildable = kwargs['buildable']
         if is_building[self.map_pos]:
             base_image = building_tile_image
         elif self.is_selected:
             base_image = grass_tile_selected_image
         else:
-            base_image = grass_tile_image
+            if buildable[self.map_pos]:
+                base_image = grass_tile_buildable_image
+            else:
+                base_image = grass_tile_not_buildable_image
 
         new_image = pygame.transform.smoothscale_by(base_image, scale)
         return new_image

@@ -13,6 +13,9 @@ class Town:
         self.is_building = {
             (x, y): False for x in range(-13, 13) for y in range(-13, 13)
         }
+        self.buildable = {
+            (x, y): False for x in range(-13, 13) for y in range(-13, 13)
+        }
         self.building_map = {}
 
         for building in self.building_list:
@@ -54,6 +57,19 @@ class Town:
         if self.earthquake_left_time <= 0:
             self.earthquake_left_time = earthquake_time
             self.earthquake()
+
+        self.buildable_area_check()
+
+    def buildable_area_check(self):
+        for building in self.building_list:
+            if 'house_range' not in building.data.keys():
+                continue
+            house_range = building.data['house_range'][building.level-1]
+            center_x, center_y = building.map_pos
+            for d_x in range(-house_range, house_range+1):
+                for d_y in range(-house_range+abs(d_x), house_range-abs(d_x)+1):
+                    map_pos = (center_x+d_x, center_y+d_y)
+                    self.buildable[map_pos] = True
 
     def build(self, map_pos, building_name):
         build_price = data[building_name]['upgrade_price'][0]
