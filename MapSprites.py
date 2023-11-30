@@ -10,9 +10,15 @@ for image_path in listdir(building_image_dir):
     building_images[type_id] = image
 
 grass_tile_buildable_image = pygame.image.load('./image/grass_tile.png')
+
 grass_tile_not_buildable_image = pygame.image.load('./image/grass_tile.png')
 grass_tile_not_buildable_image.set_alpha(200)
+
 grass_tile_selected_image = pygame.image.load('./image/grass_tile_selected.png')
+
+grass_tile_selected_not_buildable_image = pygame.image.load('./image/grass_tile_selected.png')
+grass_tile_selected_not_buildable_image.set_alpha(200)
+
 building_tile_image = pygame.image.load('./image/building_tile.png')
 
 image_memo = {}
@@ -118,7 +124,10 @@ class TileSprite(MapSprite):
         if is_building[self.map_pos]:
             base_image = building_tile_image
         elif self.is_selected:
-            base_image = grass_tile_selected_image
+            if buildable[self.map_pos]:
+                base_image = grass_tile_selected_image
+            else:
+                base_image = grass_tile_selected_not_buildable_image
         else:
             if buildable[self.map_pos]:
                 base_image = grass_tile_buildable_image

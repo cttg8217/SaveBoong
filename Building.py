@@ -2,9 +2,11 @@ from abc import *
 import random
 from building_data import data
 
+boong_probability = 0.1
+
 
 class Building(metaclass=ABCMeta):
-    def __init__(self, name, map_pos, type_id, level=1, is_upgrading=True, left_time=0):
+    def __init__(self, name, map_pos, type_id, level=1, is_upgrading=False, left_time=0):
         self.data = data[type_id]
         self.name = name
         self.map_pos = map_pos
@@ -33,6 +35,8 @@ class Building(metaclass=ABCMeta):
         self.left_time -= 1
         if self.left_time <= 0:
             self.is_upgrading = False
+            if random.random() < boong_probability:
+                self.boong += 1
 
     def action_second(self):
         pass

@@ -27,15 +27,87 @@ class InGameMenuItem(pygame.sprite.Sprite):
         return self.rect.collidepoint(*mouse_pos)
 
 
-class InGameMenu(pygame.sprite.Group):
-    def __init__(self, names, screen_width, screen_height, level=0):
+class CardViewItem(pygame.sprite.Sprite):
+    def __init__(self, name, **kwargs):
+        super().__init__()
+        self.name = name
+        base_image = pygame.image.load(f'./image/cards/{name}.png')
+        self.image = pygame.transform.smoothscale_by(base_image, 0.4)
+        self.rect = self.image.get_rect(**kwargs)
+
+    def is_mouse_over(self):
+        mouse_pos = pygame.mouse.get_pos()
+        return self.rect.collidepoint(*mouse_pos)
+
+
+class CardView(pygame.sprite.Group):
+    def __init__(self, names, screen_width, screen_height):
         super().__init__()
         num_items = len(names)
-        total_width = (num_items - 1) * 150
+        total_width = (num_items - 1) * 310
         most_left = screen_width // 2 - total_width // 2
+        for i in range(num_items):
+            x_pos = most_left + 310 * i
+            card_view_item = CardViewItem(names[i], center=(x_pos, screen_height * 0.5-50))
+            card_view_item.add(self)
+
+    def selected_item(self):
+        for card_view_item in self:
+            if card_view_item.is_mouse_over():
+                return card_view_item.name
+
+        return None
+
+
+class CostingConfirmButton(pygame.sprite.Sprite):
+    def __init__(self, cost, time, **kwargs):
+        super().__init__()
+        self.name = 'confirm'
+
+        self.image = pygame.image.load('./image/buttons/cost_confirm_base.png')
+        self.cost_text = TextSprite(f'돈: {cost}', 20, '#733600')
+        if time >= 60:
+            minutes, seconds = divmod(time, 60)
+            if seconds == 0:
+                self.time_text = TextSprite(f'시간: {minutes}분', 20, '#733600')
+            else:
+                self.time_text = TextSprite(f'시간: {minutes}분 {seconds}초', 20, '#733600')
+        else:
+            self.time_text = TextSprite(f'시간: {time}초', 20, '#733600')
+
+        self.cost_text.rect.center = (66, 25)
+        self.time_text.rect.center = (66, 70)
+
+        self.image.blit(self.cost_text.image, self.cost_text.rect)
+        self.image.blit(self.time_text.image, self.time_text.rect)
+
+        self.rect = self.image.get_rect(**kwargs)
+
+    def is_mouse_over(self):
+        mouse_pos = pygame.mouse.get_pos()
+        return self.rect.collidepoint(*mouse_pos)
+
+
+class InGameMenu(pygame.sprite.Group):
+    def __init__(self, names, screen_width, screen_height, level=0, **kwargs):
+        super().__init__()
+        confirm_button_exists = ('time' in kwargs.keys())
+        num_items = len(names)
+
+        if confirm_button_exists:
+            total_width = num_items * 150
+        else:
+            total_width = (num_items - 1) * 150
+        most_left = screen_width // 2 - total_width // 2
+
         for i in range(num_items):
             x_pos = most_left + 150 * i
             menu_item = InGameMenuItem(names[i], center=(x_pos, screen_height * 0.8 - 145 * level))
+            menu_item.add(self)
+
+        if confirm_button_exists:
+            x_pos = most_left + 150 * num_items
+            menu_item = CostingConfirmButton(kwargs['cost'], kwargs['time'], center=(x_pos, screen_height * 0.8 - 145 * level))
             menu_item.add(self)
 
     def get_item_selected(self):
@@ -104,7 +176,12 @@ class EmptyTileOptions(InGameMode):
     def __init__(self, game, map_pos):
         super().__init__(game)
         self.map_pos = map_pos
-        self.sprite_group = InGameMenu(['build'], game.screen_width, game.screen_height)
+        if self.game.town.buildable[map_pos]:
+            option_names = ['build']
+        else:
+            option_names = []
+
+        self.sprite_group = InGameMenu(option_names, game.screen_width, game.screen_height)
 
     def __del__(self):
         self.game.tile_sprite_dict[self.map_pos].is_selected = False
@@ -141,7 +218,6 @@ class Build(InGameMode):
         self.game.tile_sprite_dict[self.map_pos].is_selected = False
 
     def update(self):
-        print('Hi')
         self.game.tile_sprite_dict[self.map_pos].is_selected = True
 
     def handle_event(self, event):
@@ -150,13 +226,7 @@ class Build(InGameMode):
             if item_selected is None:
                 return MapView(self.game)
 
-            build_price = data[item_selected]['upgrade_price'][0]
-            if self.game.town.money < build_price:
-                return ErrorScreen(self.game, 'less_money')
-
-            new_building = self.game.town.build(self.map_pos, item_selected)
-            self.game.add_building_sprite(new_building)
-            return MapView(self.game)
+            return BuildConfirmation(self.game, self.map_pos, item_selected)
 
         return self
 
@@ -177,6 +247,45 @@ class ErrorScreen(InGameMode):
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             return MapView(self.game)
+
+        return self
+
+
+class CostingConfirmation(InGameMode):
+    def __init__(self, game, names, cost, time):
+        super().__init__(game)
+        self.card_view = CardView(names, self.game.screen_width, self.game.screen_height)
+        self.options = InGameMenu([], self.game.screen_width, self.game.screen_height, cost=cost, time=time)
+
+        self.sprite_group.add(self.card_view)
+        self.sprite_group.add(self.options)
+
+    def handle_event(self, event):
+        return self
+
+
+class BuildConfirmation(CostingConfirmation):
+    def __init__(self, game, map_pos, type_id):
+        self.map_pos = map_pos
+        self.type_id = type_id
+        card_name1 = f'{type_id}1_card'
+        cost = data[type_id]['upgrade_price'][0]
+        time = data[type_id]['upgrade_time'][0]
+        super().__init__(game, [card_name1], cost, time)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            option_selected = self.options.get_item_selected()
+            if option_selected is None:
+                return MapView(self.game)
+            else:
+                build_price = data[self.type_id]['upgrade_price'][0]
+                if self.game.town.money < build_price:
+                    return ErrorScreen(self.game, 'less_money')
+
+                new_building = self.game.town.build(self.map_pos, self.type_id)
+                self.game.add_building_sprite(new_building)
+                return MapView(self.game)
 
         return self
 

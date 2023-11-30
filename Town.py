@@ -2,8 +2,8 @@ import Building
 from building_data import data
 import random
 
-earthquake_probability = 0.8
-earthquake_time = 10
+earthquake_probability = 0.1
+earthquake_time = 60
 
 
 class Town:
@@ -47,6 +47,8 @@ class Town:
             self.money += building.money
             building.money = 0
 
+            if building.boong > 0:
+                self.popup_list.append('find_boong')
             self.boong += building.boong
             building.boong = 0
 
@@ -77,7 +79,7 @@ class Town:
         class_name = data[building_name]['class_name']
         self.money -= build_price
 
-        new_building = eval(f'Building.{class_name}')(map_pos, left_time=build_time)
+        new_building = eval(f'Building.{class_name}')(map_pos, level=1, is_upgrading=True, left_time=build_time)
 
         self.building_list.append(new_building)
         self.building_map[map_pos] = new_building

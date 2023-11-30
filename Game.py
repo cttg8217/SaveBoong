@@ -106,6 +106,7 @@ class Game:
             self.screen.fill('white')
             self.screen.blit(logo_image, logo_rect)
             self.screen.blit(new_game_button_image, new_game_button_rect)
+
             pygame.display.flip()
 
             clock.tick(30)
