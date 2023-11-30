@@ -74,14 +74,16 @@ class BuildingSprite(MapSprite):
         building.connected_sprite = self
 
     def data(self, screen_center, scale, **kwargs):
-        return [self.building.type_id, self.building.level, self.building.is_upgrading, screen_center, scale]
+        return [self.building.is_earthquake, self.building.type_id, self.building.level, self.building.is_upgrading, screen_center, scale]
 
     def memo_id(self, scale, **kwargs):
-        return f'{self.building.type_id}{self.building.level}{self.building.is_upgrading}_{scale}'
+        return f'{self.building.is_earthquake}{self.building.type_id}{self.building.level}{self.building.is_upgrading}_{scale}'
 
     def create_image(self, scale, **kwargs):
         if self.building.is_upgrading:
             base_image = building_images['building']
+        elif self.building.is_earthquake:
+            base_image = building_images['earthquake']
         else:
             base_image = building_images[f'{self.building.type_id}{self.building.level}']
         new_image = pygame.transform.smoothscale_by(base_image, scale)
@@ -154,7 +156,7 @@ class TextSprite(pygame.sprite.Sprite):
         super().__init__()
         self.font = font
         self.data = 0
-        self.image = font.render(str(self.data), False, '#f0e968ff')
+        self.image = font.render(str(self.data), True, '#f0e968ff')
         self.rect = self.image.get_rect(**kwargs)
 
         self.data_before = 0
@@ -162,7 +164,7 @@ class TextSprite(pygame.sprite.Sprite):
     def update(self, data, **kwargs):
         if self.data_before != data:
             self.data = data
-            self.image = self.font.render(str(self.data), False, '#f0e968ff')
+            self.image = self.font.render(str(self.data), True, '#f0e968ff')
             self.rect = self.image.get_rect(**kwargs)
 
             self.data_before = self.data

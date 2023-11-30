@@ -1,5 +1,9 @@
 import Building
 from building_data import data
+import random
+
+earthquake_probability = 0.8
+earthquake_time = 10
 
 
 class Town:
@@ -21,6 +25,10 @@ class Town:
         self.money = money
         self.boong = boong
 
+        self.earthquake_left_time = earthquake_time
+        self.earthquake_checked = True
+        self.earthquake_harm = False
+
     def update_second(self):
         for building in self.building_list:
             building.update_second()
@@ -39,7 +47,11 @@ class Town:
 
         self.total_happiness = total_happiness
         self.max_population = max_population
-        print(self.total_happiness, self.max_population)
+
+        self.earthquake_left_time -= 1
+        if self.earthquake_left_time <= 0:
+            self.earthquake_left_time = earthquake_time
+            self.earthquake()
 
     def build(self, map_pos, building_name):
         build_price = data[building_name]['upgrade_price'][0]
@@ -58,3 +70,16 @@ class Town:
     @property
     def happiness(self):
         return self.total_happiness // self.population
+
+    def earthquake(self):
+        self.earthquake_harm = False
+        for building in self.building_list:
+            if building.is_upgrading:
+                continue
+            if building.type_id == 'town_center':
+                continue
+            if random.random() < earthquake_probability:
+                building.is_earthquake = True
+                self.earthquake_harm = True
+
+        self.earthquake_checked = False

@@ -13,6 +13,7 @@ class Building(metaclass=ABCMeta):
         self.level = level
         self.is_upgrading = is_upgrading
         self.left_time = left_time
+        self.is_earthquake = False
 
         self.money = 0
         self.boong = 0

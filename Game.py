@@ -72,6 +72,8 @@ class Game:
             self.render_map_sprites()
             self.render_data()
 
+            in_game_mode_controller.update()
+
             in_game_mode_group = in_game_mode_controller.sprite_group()
             in_game_mode_group.draw(self.screen)
 
