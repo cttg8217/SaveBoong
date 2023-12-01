@@ -30,6 +30,7 @@ class Town:
         self.population = population
         self.money = money
         self.boong = boong
+        self.cat_boong = 0
         self.graduates = 0
 
         self.earthquake_left_time = earthquake_time

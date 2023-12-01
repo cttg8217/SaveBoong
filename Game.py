@@ -241,8 +241,9 @@ class Game:
 
     def setup_cat(self):
         base_image = pygame.image.load('./image/cat.png')
-        self.cat_img = pygame.transform.smoothscale_by(base_image, 3)
-        self.cat_rect = self.cat_img.get_rect()
+        self.cat_img = pygame.transform.smoothscale_by(base_image, .3)
+        self.cat_rect = self.cat_img.get_rect(bottomleft=(self.screen_width-100, self.screen_height))
 
     def render_cat(self):
-        self.screen.blit(self.cat_img, self.cat_rect)
+        if self.town.cat_show:
+            self.screen.blit(self.cat_img, self.cat_rect)

@@ -12,7 +12,9 @@ class Mission:
 
 
 def check_cat_boong(town):
-    return True
+    if town.cat_boong >= 10:
+        return True
+    return False
 
 
 def stadium_exists(town):

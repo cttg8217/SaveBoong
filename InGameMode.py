@@ -162,6 +162,16 @@ class MapView(InGameMode):
             if self.game.mission_button_rect.collidepoint(event.pos):
                 return Missions(self.game)
 
+            if self.game.town.cat_show and self.game.cat_rect.collidepoint(event.pos):
+                self.game.town.cat_show = False
+                self.game.town.cat_left_time = 60
+                if self.game.town.boong > 0:
+                    self.game.town.boong -= 1
+                    self.game.town.cat_boong += 1
+                    return PopupScreen(self.game, 'give_boong')
+                else:
+                    return PopupScreen(self.game, 'no_boong')
+
             building_sprite_clicked = self.game.get_building_clicked()
             if building_sprite_clicked is None:
                 tile_clicked = self.game.get_tile_clicked()
