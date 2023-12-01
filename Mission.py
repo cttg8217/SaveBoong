@@ -22,7 +22,7 @@ def check_cat_boong(town):
 
 def stadium_exists(town):
     for building in town.building_list:
-        if isinstance(building, Building.Stadium):
+        if isinstance(building, Building.Stadium) and building.is_available:
             return True
     return False
 
@@ -37,14 +37,14 @@ def check_toys(town):
 
 def work_center_exists(town):
     for building in town.building_list:
-        if isinstance(building, Building.WorkCenter):
+        if isinstance(building, Building.WorkCenter) and building.is_available:
             return True
     return False
 
 
 def art_center_exists(town):
     for building in town.building_list:
-        if isinstance(building, Building.ArtCenter):
+        if isinstance(building, Building.ArtCenter) and building.is_available:
             return True
     return False
 

@@ -90,13 +90,6 @@ data = {
         'manufacture_count': 10,
         'manufacture_time': 30,
     },
-    'work_center': {
-        'class_name': 'WorkCenter',
-        'max_level': 1,
-        'upgrade_price': [12000],
-        'upgrade_time': [240],
-        'total_happiness': [8000]
-    },
     'art_center': {
         'class_name': 'ArtCenter',
         'max_level': 1,

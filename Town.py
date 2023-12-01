@@ -136,7 +136,7 @@ class Town:
     def build(self, map_pos, building_name):
         # 가격, 시간 등 계산
         build_price = data[building_name]['upgrade_price'][0]
-        build_time = data[building_name]['upgrade_time'][0]
+        build_time = data[building_name]['upgrade_time'][0] / self.build_speed
         class_name = data[building_name]['class_name']
         self.money -= build_price
         

@@ -37,7 +37,7 @@ class InGameModeController:
                 popup_name = self.game.town.popup_list.pop(0)
                 self.in_game_mode = PopupScreen(self.game, popup_name)
 
-            if self.game.mission_success_cnt >= 1 and not self.is_cleared:
+            if self.game.mission_success_cnt >= 4 and not self.is_cleared:
                 self.is_cleared = True
                 self.in_game_mode = MissionShowScreen(self.game, 'end_message', scale=0.25)
 
