@@ -348,6 +348,34 @@ class ResearchConfirmation(CostingConfirmation):
         return self
 
 
+class ManufactureConfirmation(CostingConfirmation):
+    def __init__(self, game, building):
+        self.game = game
+        self.building = building
+
+        self.cost = building.data['manufacture_price']
+        time = building.data['manufacture_time']
+
+        super().__init__(game, ['manufacture_card'], self.cost, time)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            item_selected = self.options.get_item_selected()
+            if item_selected == 'confirm':
+                if self.game.town.money < self.cost:
+                    return PopupScreen(self.game, 'less_money')
+
+                if self.building.is_production_in_progress:
+                    return PopupScreen(self.game, 'already_manufacturing')
+
+                self.building.start_production()
+                return PopupScreen(self.game, 'manufacture_start')
+            else:
+                return MapView(self.game)
+
+        return self
+
+
 class ShowInfo(InGameMode):
     def __init__(self, game, building):
         super().__init__(game)
@@ -405,6 +433,8 @@ class BuildingOptions(InGameMode):
         if self.building.is_available:
             if isinstance(self.building, Building.Laboratory):
                 option_names.append('research')
+            if isinstance(self.building, Building.Factory) and self.game.town.is_research_done:
+                option_names.append('manufacture')
             if not self.building.is_max_level:
                 option_names.append('check_upgrade')
         if self.building.is_earthquake:
@@ -429,4 +459,6 @@ class BuildingOptions(InGameMode):
                 return UpgradeConfirmation(self.game, self.building)
             if selected_option == 'research':
                 return ResearchConfirmation(self.game, self.building)
+            if selected_option == 'manufacture':
+                return ManufactureConfirmation(self.game, self.building)
         return self

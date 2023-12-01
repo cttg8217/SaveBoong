@@ -193,7 +193,7 @@ class Game:
         self.building_sprite_group.draw(self.screen)
 
     def setup_data(self):
-        names = ['money', 'happiness', 'boong', 'population', 'graduates']
+        names = ['money', 'happiness', 'boong', 'population', 'graduates', 'products']
         self.data_sprite_list = []
         for i in range(len(names)):
             new_data_sprite = MapSprites.DataSprite(self.town, names[i], i+1)
@@ -202,6 +202,9 @@ class Game:
     def render_data(self):
         for data_sprite in self.data_sprite_list:
             if data_sprite.name == 'graduates' and not self.town.school_exists:
+                continue
+
+            if data_sprite.name == 'products' and not self.town.is_research_done:
                 continue
 
             data_sprite.update()

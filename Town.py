@@ -183,3 +183,7 @@ class Town:
             min_d_population = 0
 
         self.population += min_d_population / 60
+
+    @property
+    def products(self):
+        return Building.Factory.product_count

@@ -171,7 +171,9 @@ class Factory(Building):
         self.is_production_in_progress = False
         self.production_time_left = 0
 
-    def start_production_toy(self):
+    def start_production(self):
+        price = self.data['manufacture_price']
+        self.money -= price
         self.is_production_in_progress = True
         self.production_time_left = self.data['manufacture_time']
 
