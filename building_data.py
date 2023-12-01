@@ -1,3 +1,4 @@
+# 하드코딩된 마을 건물들의 데이터
 data = {
     'town_center': {
         'class_name': 'TownCenter',

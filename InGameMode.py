@@ -5,6 +5,161 @@ from math import ceil
 import Building
 
 
+# 빌딩 옵션 선택 화면, 미션 확인 화면 등 각종 게임 내 화면 상태의 부모 클래스가 되는 인게임 상의 모드 클래스.
+class InGameMode(metaclass=ABCMeta):
+    def __init__(self, game):
+        self.game = game
+        self.sprite_group = pygame.sprite.Group()  # 해당 모드에서 표시해야 하는 스프라이트 그룹
+
+    @abstractmethod
+    def handle_event(self, event):  # 이벤트가 왔을 때 처리하는 방식. 이벤트 처리 후 표시할 다음 화면을 return 한다. ex) 맵 보는 모드에서 건물을 누르면 건물 건설 모드로 이동.
+        pass
+
+    def update(self):  # 화면이 실시간으로 바뀌여야 한다면 update를 사용한다.
+        pass
+
+
+class InGameModeController:  # InGameMode들을 연결시켜주는 클래스.
+    def __init__(self, game):
+        self.game = game
+        self.in_game_mode = MapView(game)  # 현재의 모드
+
+    def handle_event(self, event):  # 이벤트를 받으면 현재 모드에서 handle시키고, 반환값을 다음 in_game_mode로 설정한다.
+        next_in_game_mode = self.in_game_mode.handle_event(event)
+        self.in_game_mode = next_in_game_mode
+
+    def update(self):  # town의 popup_list는 화면에 띄울 팝업을 queue처럼 관리한다. 만약 맵을 보는 기본 화면이고 popup이 있다면 하나씩 빼서 보여준다.
+        if isinstance(self.in_game_mode, MapView):
+            if len(self.game.town.popup_list) != 0:
+                popup_name = self.game.town.popup_list.pop(0)
+                self.in_game_mode = PopupScreen(self.game, popup_name)
+
+    def sprite_group(self):
+        return self.in_game_mode.sprite_group
+
+
+# 가장 기본적인, 맵을 보는 화면 클래스
+class MapView(InGameMode):
+    def __init__(self, game):
+        super().__init__(game)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # 미션 버튼 클릭 --> 미션 화면으로 이동
+            if self.game.mission_button_rect.collidepoint(event.pos):
+                return Missions(self.game)
+
+            # 고양이 클릭 --> 붕어빵을 주는 사건 처리
+            if self.game.town.cat_show and self.game.cat_rect.collidepoint(event.pos):
+                self.game.town.cat_show = False
+                self.game.town.cat_left_time = 60
+
+                if self.game.town.boong > 0:
+                    self.game.town.boong -= 1
+                    self.game.town.cat_boong += 1
+                    return PopupScreen(self.game, 'give_boong')
+                else:
+                    return PopupScreen(self.game, 'no_boong')
+
+            building_sprite_clicked = self.game.get_building_clicked()
+            if building_sprite_clicked is None:
+                tile_clicked = self.game.get_tile_clicked()
+                print(tile_clicked.map_pos)
+                # 빈 타일 클릭 시 빈 타일 옵션 화면으로 이동
+                if tile_clicked is not None:
+                    tile_clicked.is_selected = True
+
+                    map_pos = tile_clicked.map_pos
+                    return EmptyTileOptions(self.game, map_pos)
+            else:
+                # 빌딩 클릭시 빌딩 관련 옵션 화면으로 이동
+                return BuildingOptions(self.game, building_sprite_clicked.building)
+
+        return self
+
+
+# 빈 타일의 옵션
+class EmptyTileOptions(InGameMode):
+    def __init__(self, game, map_pos):
+        super().__init__(game)
+        self.map_pos = map_pos
+        # 해당 타일에 건물을 지을 수 있다면 옵션에 추가
+        if self.game.town.buildable[map_pos]:
+            option_names = ['build']
+        else:
+            option_names = []
+
+        # 인게임 메뉴 클래스를 이용해 메뉴바 생성
+        self.sprite_group = InGameMenu(option_names, game.screen_width, game.screen_height)
+
+    # 없어질 때 선택 해재
+    def __del__(self):
+        self.game.tile_sprite_dict[self.map_pos].is_selected = False
+
+    def update(self):
+        self.game.tile_sprite_dict[self.map_pos].is_selected = True
+
+    # 화면 클릭시: 아무데나 다른데 클릭 -> 기본화면으로 돌아감, 건설 버튼 클릭 -> 건설 화면
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            item_selected = self.sprite_group.get_item_selected()
+
+            if item_selected is None:
+                return MapView(self.game)
+            elif item_selected == 'build':
+                return Build(self.game, self.map_pos)
+
+        return self
+
+
+# 빌딩 관련된 옵션들 화면 클래스
+class BuildingOptions(InGameMode):
+    def __init__(self, game, building):
+        super().__init__(game)
+        self.building = building
+        building_max_level = building.data['max_level']
+        label = f'{building.name}({building.level}/{building_max_level}Lv)'
+        # 빌딩 이름 화면
+        self.building_name_sprite = TextSprite(label, 30, 'black', center=(self.game.screen_width//2, self.game.screen_height * 0.8 - 100))
+        self.building_name_sprite.add(self.sprite_group)
+
+        # 건물들마다 특수한 옵션 추가
+        option_names = []
+        if self.building.is_available:
+            if isinstance(self.building, Building.Laboratory):
+                if not self.game.town.is_research_done:
+                    option_names.append('research')
+            if isinstance(self.building, Building.Factory) and self.game.town.is_research_done:
+                option_names.append('manufacture')
+            if not self.building.is_max_level:
+                option_names.append('check_upgrade') #
+        if self.building.is_earthquake:
+            option_names.append('fix')
+        option_names.append('info')
+
+        self.building_options = InGameMenu(option_names, game.screen_width, game.screen_height)
+        self.sprite_group.add(self.building_options)
+
+        print([self.sprite_group])
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            selected_option = self.building_options.get_item_selected()
+            if selected_option is None:
+                return MapView(self.game)
+            if selected_option == 'info':
+                return ShowInfo(self.game, self.building)
+            if selected_option == 'fix':
+                return FixBuilding(self.game, self.building)
+            if selected_option == 'check_upgrade':
+                return UpgradeConfirmation(self.game, self.building)
+            if selected_option == 'research':
+                return ResearchConfirmation(self.game, self.building)
+            if selected_option == 'manufacture':
+                return ManufactureConfirmation(self.game, self.building)
+        return self
+
+
 class PopupMessage(pygame.sprite.Sprite):
     def __init__(self, game, name, scale=1):
         super().__init__()
@@ -121,101 +276,6 @@ class InGameMenu(pygame.sprite.Group):
         return None
 
 
-class InGameModeController:
-    def __init__(self, game):
-        self.game = game
-        self.in_game_mode = MapView(game)
-
-    def handle_event(self, event):
-        next_in_game_mode = self.in_game_mode.handle_event(event)
-        self.in_game_mode = next_in_game_mode
-
-    def update(self):
-        if isinstance(self.in_game_mode, MapView):
-            if len(self.game.town.popup_list) != 0:
-                popup_name = self.game.town.popup_list.pop(0)
-                self.in_game_mode = PopupScreen(self.game, popup_name)
-
-    def sprite_group(self):
-        return self.in_game_mode.sprite_group
-
-
-class InGameMode(metaclass=ABCMeta):
-    def __init__(self, game):
-        self.game = game
-        self.sprite_group = pygame.sprite.Group()
-
-    @abstractmethod
-    def handle_event(self, event):
-        pass
-
-    def update(self):
-        pass
-
-
-class MapView(InGameMode):
-    def __init__(self, game):
-        super().__init__(game)
-
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.game.mission_button_rect.collidepoint(event.pos):
-                return Missions(self.game)
-
-            if self.game.town.cat_show and self.game.cat_rect.collidepoint(event.pos):
-                self.game.town.cat_show = False
-                self.game.town.cat_left_time = 60
-                if self.game.town.boong > 0:
-                    self.game.town.boong -= 1
-                    self.game.town.cat_boong += 1
-                    return PopupScreen(self.game, 'give_boong')
-                else:
-                    return PopupScreen(self.game, 'no_boong')
-
-            building_sprite_clicked = self.game.get_building_clicked()
-            if building_sprite_clicked is None:
-                tile_clicked = self.game.get_tile_clicked()
-                print(tile_clicked.map_pos)
-                if tile_clicked is not None:
-                    tile_clicked.is_selected = True
-
-                    map_pos = tile_clicked.map_pos
-                    return EmptyTileOptions(self.game, map_pos)
-            else:
-                return BuildingOptions(self.game, building_sprite_clicked.building)
-
-        return self
-
-
-class EmptyTileOptions(InGameMode):
-    def __init__(self, game, map_pos):
-        super().__init__(game)
-        self.map_pos = map_pos
-        if self.game.town.buildable[map_pos]:
-            option_names = ['build']
-        else:
-            option_names = []
-
-        self.sprite_group = InGameMenu(option_names, game.screen_width, game.screen_height)
-
-    def __del__(self):
-        self.game.tile_sprite_dict[self.map_pos].is_selected = False
-
-    def update(self):
-        self.game.tile_sprite_dict[self.map_pos].is_selected = True
-
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            item_selected = self.sprite_group.get_item_selected()
-
-            if item_selected is None:
-                return MapView(self.game)
-            elif item_selected == 'build':
-                return Build(self.game, self.map_pos)
-
-        return self
-
-
 class Build(InGameMode):
     def __init__(self, game, map_pos):
         super().__init__(game)
@@ -258,7 +318,7 @@ class Missions(InGameMode):
         super().__init__(game)
         name_group_0 = []
         name_group_1 = []
-        for i in [1, 2, 3, 4]:
+        for i in [1, 2, 3]:
             mission = game.mission_list[i-1]
             if mission.is_done:
                 name_group_0.append(f'mission{i}_done')
@@ -489,48 +549,3 @@ class TextSprite(pygame.sprite.Sprite):
         font = pygame.font.Font('./fonts/CookieRun Regular.otf', size)
         self.image = font.render(text, True, color)
         self.rect = self.image.get_rect(**kwargs)
-
-
-class BuildingOptions(InGameMode):
-    def __init__(self, game, building):
-        super().__init__(game)
-        self.building = building
-        building_max_level = building.data['max_level']
-        label = f'{building.name}({building.level}/{building_max_level}Lv)'
-        self.building_name_sprite = TextSprite(label, 30, 'black', center=(self.game.screen_width//2, self.game.screen_height * 0.8 - 100))
-        self.building_name_sprite.add(self.sprite_group)
-
-        option_names = []
-        if self.building.is_available:
-            if isinstance(self.building, Building.Laboratory):
-                if not self.game.town.is_research_done:
-                    option_names.append('research')
-            if isinstance(self.building, Building.Factory) and self.game.town.is_research_done:
-                option_names.append('manufacture')
-            if not self.building.is_max_level:
-                option_names.append('check_upgrade')
-        if self.building.is_earthquake:
-            option_names.append('fix')
-        option_names.append('info')
-
-        self.building_options = InGameMenu(option_names, game.screen_width, game.screen_height)
-        self.sprite_group.add(self.building_options)
-
-        print([self.sprite_group])
-
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            selected_option = self.building_options.get_item_selected()
-            if selected_option is None:
-                return MapView(self.game)
-            if selected_option == 'info':
-                return ShowInfo(self.game, self.building)
-            if selected_option == 'fix':
-                return FixBuilding(self.game, self.building)
-            if selected_option == 'check_upgrade':
-                return UpgradeConfirmation(self.game, self.building)
-            if selected_option == 'research':
-                return ResearchConfirmation(self.game, self.building)
-            if selected_option == 'manufacture':
-                return ManufactureConfirmation(self.game, self.building)
-        return self
