@@ -2,8 +2,7 @@ import pygame
 import Town
 import MapSprites
 import InGameMode
-from math import floor
-
+import Mission
 clock = pygame.time.Clock()
 
 screen_center_dx_levels = [-200, -100, 0, 100, 200]
@@ -41,6 +40,8 @@ class Game:
 
         self.setup_map_sprites()
         self.setup_data()
+        self.setup_mission_button()
+        self.setup_missions()
 
         while self.running:
             for event in pygame.event.get():
@@ -56,6 +57,7 @@ class Game:
 
             self.render_map_sprites()
             self.render_data()
+            self.render_mission_button()
 
             in_game_mode_controller.update()
 
@@ -209,3 +211,15 @@ class Game:
 
             data_sprite.update()
             data_sprite.draw(self.screen)
+
+    def setup_mission_button(self):
+        self.mission_button_image = pygame.image.load('./image/buttons/mission.png')
+        self.mission_button_rect = self.mission_button_image.get_rect(midleft=(260, 75))
+
+    def render_mission_button(self):
+        self.screen.blit(self.mission_button_image, self.mission_button_rect)
+
+    def setup_missions(self):
+        self.mission_list = []
+        for i in range(len(Mission.check_func_list)):
+            self.mission_list.append(Mission.Mission(self.town, Mission.check_func_list[i]))

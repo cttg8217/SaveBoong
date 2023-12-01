@@ -6,10 +6,11 @@ import Building
 
 
 class PopupMessage(pygame.sprite.Sprite):
-    def __init__(self, game, name):
+    def __init__(self, game, name, scale=1):
         super().__init__()
         self.game = game
-        self.image = pygame.image.load(f'./image/popups/{name}.png')
+        base_image = pygame.image.load(f'./image/popups/{name}.png')
+        self.image = pygame.transform.smoothscale_by(base_image, scale)
         self.rect = self.image.get_rect(center=(game.screen_width // 2, game.screen_height // 2))
 
     def is_mouse_over(self):
@@ -158,6 +159,8 @@ class MapView(InGameMode):
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.game.mission_button_rect.collidepoint(event.pos):
+                return Missions(self.game)
 
             building_sprite_clicked = self.game.get_building_clicked()
             if building_sprite_clicked is None:
@@ -240,16 +243,72 @@ class Build(InGameMode):
         return None
 
 
-class PopupScreen(InGameMode):
-    def __init__(self, game, name):
+class Missions(InGameMode):
+    def __init__(self, game):
         super().__init__(game)
-        self.popup_sprite = PopupMessage(game, name)
+        name_group_0 = []
+        name_group_1 = []
+        for i in [1, 2, 3, 4]:
+            mission = game.mission_list[i-1]
+            if mission.is_done:
+                name_group_0.append(f'mission{i}_done')
+            else:
+                name_group_0.append(f'mission{i}_not_done')
+        for i in [5, 6, 7]:
+            mission = game.mission_list[i - 1]
+            if mission.is_done:
+                name_group_1.append(f'mission{i}_done')
+            else:
+                name_group_1.append(f'mission{i}_not_done')
+
+        self.sprite_group_0 = InGameMenu(name_group_0, game.screen_width, game.screen_height, level=0)
+        self.sprite_group_1 = InGameMenu(name_group_1, game.screen_width, game.screen_height, level=1)
+
+        self.sprite_group.add(self.sprite_group_0, self.sprite_group_1)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            item_selected = self.get_item_selected()
+            if item_selected is None:
+                return MapView(self.game)
+
+            return MessageScreen(self.game, item_selected)
+
+        return self
+
+    def get_item_selected(self):
+        item_selected = self.sprite_group_0.get_item_selected()
+        if item_selected is not None:
+            return item_selected
+
+        item_selected = self.sprite_group_1.get_item_selected()
+        if item_selected is not None:
+            return item_selected
+
+        return None
+
+
+class PopupScreen(InGameMode):
+    def __init__(self, game, name, scale=1):
+        super().__init__(game)
+        self.popup_sprite = PopupMessage(game, name, scale)
         self.popup_sprite.add(self.sprite_group)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             return MapView(self.game)
 
+        return self
+
+
+class MessageScreen(PopupScreen):
+    def __init__(self, game, name):
+        super().__init__(game, name, scale=0.35)
+
+    def handle_event(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                return Missions(self.game)
         return self
 
 
@@ -282,6 +341,8 @@ class BuildConfirmation(CostingConfirmation):
             option_selected = self.options.get_item_selected()
             if option_selected is None:
                 return MapView(self.game)
+            if self.type_id == 'stadium' and self.game.town.population < 500:
+                return PopupScreen(self.game, 'less_people')
             else:
                 if self.game.town.money < self.cost:
                     return PopupScreen(self.game, 'less_money')
@@ -432,7 +493,8 @@ class BuildingOptions(InGameMode):
         option_names = []
         if self.building.is_available:
             if isinstance(self.building, Building.Laboratory):
-                option_names.append('research')
+                if not self.game.town.is_research_done:
+                    option_names.append('research')
             if isinstance(self.building, Building.Factory) and self.game.town.is_research_done:
                 option_names.append('manufacture')
             if not self.building.is_max_level:
