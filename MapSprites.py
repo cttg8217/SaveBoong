@@ -187,5 +187,3 @@ class DataBoxTextSprite(pygame.sprite.Sprite):
     def update(self, data, **kwargs):
         self.image = self.font.render(str(floor(data)), True, '#AA5B00')
         self.rect = self.image.get_rect(**kwargs)
-
-

@@ -183,6 +183,7 @@ class Town:
             min_d_population = 0
 
         self.population += min_d_population / 60
+        self.population = min(self.population, self.max_population)
 
     @property
     def products(self):
