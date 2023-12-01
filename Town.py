@@ -43,6 +43,9 @@ class Town:
 
         self.is_research_done = False
 
+        self.cat_left_time = 90
+        self.cat_show = False
+
     def update_second(self):
         for building in self.building_list:
             building.update_second()
@@ -105,6 +108,10 @@ class Town:
             self.earthquake()
 
         self.buildable_area_check()
+
+        self.cat_left_time -= 1
+        if self.cat_left_time == 0:
+            self.cat_show = True
 
     def buildable_area_check(self):
         for building in self.building_list:

@@ -16,7 +16,6 @@ logo_image = pygame.image.load('image/logo.png')
 new_game_button_image = pygame.image.load('image/new_game_button.png')
 new_game_button_image_larger = pygame.transform.smoothscale_by(new_game_button_image, 1.3)
 
-
 class Game:
     def __init__(self):
         pygame.init()
@@ -36,12 +35,13 @@ class Game:
         self.screen_center_dx_level = 2
         self.screen_center_dy_level = 2
         self.scale_level = 2
-        in_game_mode_controller = InGameMode.InGameModeController(self)
+        self.in_game_mode_controller = InGameMode.InGameModeController(self)
 
         self.setup_map_sprites()
         self.setup_data()
         self.setup_mission_button()
         self.setup_missions()
+        self.setup_cat()
 
         while self.running:
             for event in pygame.event.get():
@@ -49,9 +49,10 @@ class Game:
                     self.running = False
 
                 self.handle_map_movement(event)
-                in_game_mode_controller.handle_event(event)
+                self.in_game_mode_controller.handle_event(event)
 
             self.town_update()
+            self.update_missions()
 
             self.screen.fill('white')
 
@@ -59,9 +60,11 @@ class Game:
             self.render_data()
             self.render_mission_button()
 
-            in_game_mode_controller.update()
+            self.render_cat()
 
-            in_game_mode_group = in_game_mode_controller.sprite_group()
+            self.in_game_mode_controller.update()
+
+            in_game_mode_group = self.in_game_mode_controller.sprite_group()
             in_game_mode_group.draw(self.screen)
 
             pygame.display.flip()
@@ -220,6 +223,26 @@ class Game:
         self.screen.blit(self.mission_button_image, self.mission_button_rect)
 
     def setup_missions(self):
+        self.mission_success_cnt = 0
         self.mission_list = []
         for i in range(len(Mission.check_func_list)):
             self.mission_list.append(Mission.Mission(self.town, Mission.check_func_list[i]))
+
+    def update_missions(self):
+        new_mission_success_cnt = 0
+        for mission in self.mission_list:
+            if mission.is_done:
+                new_mission_success_cnt += 1
+
+        if new_mission_success_cnt > self.mission_success_cnt:
+            self.town.popup_list.append('mission_done')
+
+        self.mission_success_cnt = new_mission_success_cnt
+
+    def setup_cat(self):
+        base_image = pygame.image.load('./image/cat.png')
+        self.cat_img = pygame.transform.smoothscale_by(base_image, 3)
+        self.cat_rect = self.cat_img.get_rect()
+
+    def render_cat(self):
+        self.screen.blit(self.cat_img, self.cat_rect)
