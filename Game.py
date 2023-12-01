@@ -193,27 +193,16 @@ class Game:
         self.building_sprite_group.draw(self.screen)
 
     def setup_data(self):
-        self.data_sprite_group = pygame.sprite.Group()
-
-        self.money_data_sprite = MapSprites.DataSprite(self.town, 'money', 1)
-        self.happiness_data_sprite = MapSprites.DataSprite(self.town, 'happiness', 2)
-        self.boong_data_sprite = MapSprites.DataSprite(self.town, 'boong', 3)
-        self.population_data_sprite = MapSprites.DataSprite(self.town, 'population', 4)
-
-        self.money_data_sprite.add(self.data_sprite_group)
-        self.happiness_data_sprite.add(self.data_sprite_group)
-        self.boong_data_sprite.add(self.data_sprite_group)
-        self.population_data_sprite.add(self.data_sprite_group)
+        names = ['money', 'happiness', 'boong', 'population', 'graduates']
+        self.data_sprite_list = []
+        for i in range(len(names)):
+            new_data_sprite = MapSprites.DataSprite(self.town, names[i], i+1)
+            self.data_sprite_list.append(new_data_sprite)
 
     def render_data(self):
-        self.money_data_sprite.update()
-        self.money_data_sprite.draw(self.screen)
+        for data_sprite in self.data_sprite_list:
+            if data_sprite.name == 'graduates' and not self.town.school_exists:
+                continue
 
-        self.happiness_data_sprite.update()
-        self.happiness_data_sprite.draw(self.screen)
-
-        self.boong_data_sprite.update()
-        self.boong_data_sprite.draw(self.screen)
-
-        self.population_data_sprite.update()
-        self.population_data_sprite.draw(self.screen)
+            data_sprite.update()
+            data_sprite.draw(self.screen)

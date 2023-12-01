@@ -65,8 +65,8 @@ data = {
     'weather_center': {
         'class_name': 'WeatherCenter',
         'max_level': 2,
-        'upgrade_price': [1, 4000],
-        'upgrade_time': [1, 210],
+        'upgrade_price': [3000, 4000],
+        'upgrade_time': [150, 210],
         'total_happiness': [800, 1200],
         'repair_price_reduction': [0.05, 0.15],
     },
@@ -76,9 +76,9 @@ data = {
         'upgrade_price': [1750],
         'upgrade_time': [240],
         'total_happiness': [2000],
-        'research_time': 30,
+        'research_time': 3,
         'research_price': 1000,
-        'research_probability': 0.3,
+        'research_probability': 0.5,
     },
     'factory': {
         'class_name': 'Factory',

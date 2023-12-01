@@ -2,6 +2,7 @@ import pygame
 from abc import *
 from building_data import data
 from math import ceil
+import Building
 
 
 class PopupMessage(pygame.sprite.Sprite):
@@ -322,6 +323,31 @@ class UpgradeConfirmation(CostingConfirmation):
         return self
 
 
+class ResearchConfirmation(CostingConfirmation):
+    def __init__(self, game, building):
+        self.game = game
+        self.building = building
+
+        self.cost = building.data['research_price']
+        time = building.data['research_time']
+
+        super().__init__(game, ['research_card'], self.cost, time)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            item_selected = self.options.get_item_selected()
+            if item_selected == 'confirm':
+                if self.game.town.money < self.cost:
+                    return PopupScreen(self.game, 'less_money')
+
+                self.building.start_research()
+                return PopupScreen(self.game, 'research_start')
+            else:
+                return MapView(self.game)
+
+        return self
+
+
 class ShowInfo(InGameMode):
     def __init__(self, game, building):
         super().__init__(game)
@@ -377,7 +403,8 @@ class BuildingOptions(InGameMode):
 
         option_names = []
         if self.building.is_available:
-            # TODO: options
+            if isinstance(self.building, Building.Laboratory):
+                option_names.append('research')
             if not self.building.is_max_level:
                 option_names.append('check_upgrade')
         if self.building.is_earthquake:
@@ -400,4 +427,6 @@ class BuildingOptions(InGameMode):
                 return FixBuilding(self.game, self.building)
             if selected_option == 'check_upgrade':
                 return UpgradeConfirmation(self.game, self.building)
+            if selected_option == 'research':
+                return ResearchConfirmation(self.game, self.building)
         return self

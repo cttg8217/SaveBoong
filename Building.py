@@ -6,7 +6,7 @@ boong_probability = 0.1
 
 
 class Building(metaclass=ABCMeta):
-    def __init__(self, name, map_pos, type_id, level=0, is_upgrading=False, left_time=0):
+    def __init__(self, name, map_pos, type_id, level=1, is_upgrading=False, left_time=0):
         self.data = data[type_id]
         self.name = name
         self.map_pos = map_pos
@@ -16,11 +16,13 @@ class Building(metaclass=ABCMeta):
         self.is_upgrading = is_upgrading
         self.left_time = left_time
         self.is_earthquake = False
+        self.graduates = 0
 
         self.money = 0
         self.boong = 0
 
     def set_upgrade(self, build_speed):
+        self.level += 1
         self.is_upgrading = True
         self.left_time = data[self.type_id]['upgrade_time'][self.level - 1] / build_speed
 
@@ -37,8 +39,6 @@ class Building(metaclass=ABCMeta):
             self.is_upgrading = False
             if random.random() < boong_probability:
                 self.boong += 1
-
-            self.level += 1
 
     def action_second(self):
         pass
@@ -112,7 +112,6 @@ class Shop(Building):
     def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
         super().__init__('붕어빵 가게', map_pos, 'shop', level, is_upgrading, left_time)
         self.money = 0
-        self.boong = 0
         self.passed_seconds = 0
 
     def action_second(self):
@@ -150,7 +149,7 @@ class Laboratory(Building):
     def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
         super().__init__('연구소', map_pos, 'laboratory', level, is_upgrading, left_time)
 
-    def start_research(self, item):
+    def start_research(self):
         Laboratory.is_research_in_progress = True
         Laboratory.research_time_left = self.data['research_time']
 
@@ -161,8 +160,7 @@ class Laboratory(Building):
             if Laboratory.research_time_left == 0:
                 Laboratory.is_research_in_progress = False
 
-                if random.random() < self.data['research_probability']:
-                    Laboratory.is_research_done = True
+                Laboratory.is_research_done = True
 
 
 class Factory(Building):
