@@ -76,7 +76,7 @@ data = {
         'upgrade_price': [1750],
         'upgrade_time': [240],
         'total_happiness': [2000],
-        'research_time': 3,
+        'research_time': 30,
         'research_price': 1000,
         'research_probability': 0.5,
     },
