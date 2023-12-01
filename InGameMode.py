@@ -577,6 +577,7 @@ class ManufactureConfirmation(CostingConfirmation):
         return self
 
 
+# 건물 고침을 확정짓는 화면
 class FixBuilding(CostingConfirmation):
     def __init__(self, game, building):
         self.game = game
@@ -594,5 +595,7 @@ class FixBuilding(CostingConfirmation):
                 else:
                     self.game.town.repair_building(self.building)
                     return MapView(self.game)
+
+            return MapView(self.game)
 
         return self
