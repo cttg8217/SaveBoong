@@ -132,17 +132,17 @@ class BuildingOptions(InGameMode):
             if isinstance(self.building, Building.Factory) and self.game.town.is_research_done:
                 option_names.append('manufacture')
             if not self.building.is_max_level:
-                option_names.append('check_upgrade') #
+                option_names.append('check_upgrade')  # 최대 레벨 아니면 업그레이드 옵션
         if self.building.is_earthquake:
-            option_names.append('fix')
-        option_names.append('info')
+            option_names.append('fix')  # 지진으로 고장났다면 고치기 옵션
+        option_names.append('info')  # 정보 보기 옵션
 
-        self.building_options = InGameMenu(option_names, game.screen_width, game.screen_height)
+        self.building_options = InGameMenu(option_names, game.screen_width, game.screen_height)  # 옵션들로 메뉴 만들기
         self.sprite_group.add(self.building_options)
 
         print([self.sprite_group])
 
-    def handle_event(self, event):
+    def handle_event(self, event):  # 각각의 옵션별 알맞는 화면으로 이동
         if event.type == pygame.MOUSEBUTTONDOWN:
             selected_option = self.building_options.get_item_selected()
             if selected_option is None:
@@ -160,17 +160,32 @@ class BuildingOptions(InGameMode):
         return self
 
 
+# 다양한 팝업 메시지를 보여주는 sprite.
 class PopupMessage(pygame.sprite.Sprite):
     def __init__(self, game, name, scale=1):
         super().__init__()
         self.game = game
-        base_image = pygame.image.load(f'./image/popups/{name}.png')
+        base_image = pygame.image.load(f'./image/popups/{name}.png') # 해당 경로에서 name에 맞는 사진을 찾아 image로 설정
         self.image = pygame.transform.smoothscale_by(base_image, scale)
         self.rect = self.image.get_rect(center=(game.screen_width // 2, game.screen_height // 2))
 
-    def is_mouse_over(self):
+    def is_mouse_over(self): # 마우스가 위에 있는지 확인
         mouse_pos = pygame.mouse.get_pos()
         return self.rect.collidepoint(*mouse_pos)
+
+
+# 팝업 메시지가 있는 화면
+class PopupScreen(InGameMode):
+    def __init__(self, game, name, scale=1):
+        super().__init__(game)
+        self.popup_sprite = PopupMessage(game, name, scale)
+        self.popup_sprite.add(self.sprite_group)
+
+    def handle_event(self, event): # 아무데나 누르면 기본 화면으로 이동
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            return MapView(self.game)
+
+        return self
 
 
 class InGameMenuItem(pygame.sprite.Sprite):
@@ -324,7 +339,7 @@ class Missions(InGameMode):
                 name_group_0.append(f'mission{i}_done')
             else:
                 name_group_0.append(f'mission{i}_not_done')
-        for i in [5, 6, 7]:
+        for i in [4, 6, 7]:
             mission = game.mission_list[i - 1]
             if mission.is_done:
                 name_group_1.append(f'mission{i}_done')
@@ -356,19 +371,6 @@ class Missions(InGameMode):
             return item_selected
 
         return None
-
-
-class PopupScreen(InGameMode):
-    def __init__(self, game, name, scale=1):
-        super().__init__(game)
-        self.popup_sprite = PopupMessage(game, name, scale)
-        self.popup_sprite.add(self.sprite_group)
-
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            return MapView(self.game)
-
-        return self
 
 
 class MessageScreen(PopupScreen):

@@ -8,7 +8,7 @@ boong_probability = 0.15
 
 # 마을 내의 건물을 위한 추상 클래스
 class Building(metaclass=ABCMeta):
-    def __init__(self, name, map_pos, type_id, level=1, is_upgrading=False, is_earthquake = False, left_time=0):
+    def __init__(self, name, map_pos, type_id, level=1, is_upgrading=False, left_time=0):
         self.data = data[type_id]  # 데이터 파일에서 자신의 데이터만을 취한다.
         self.name = name  # 건물의 화면상 이름
         self.map_pos = map_pos  # 건물의 맵 위 위치
