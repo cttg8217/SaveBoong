@@ -8,16 +8,15 @@ boong_probability = 0.15
 
 # 마을 내의 건물을 위한 추상 클래스
 class Building(metaclass=ABCMeta):
-    def __init__(self, name, map_pos, type_id, level=1, is_upgrading=False, left_time=0):
+    def __init__(self, name, map_pos, type_id, level=1, is_upgrading=False, left_time=0, is_earthquake=False):
         self.data = data[type_id]  # 데이터 파일에서 자신의 데이터만을 취한다.
         self.name = name  # 건물의 화면상 이름
         self.map_pos = map_pos  # 건물의 맵 위 위치
         self.type_id = type_id  # 건물의 게임상 아이디
-        self.connected_sprite = None  # 건물과 연결된 화면상의 Sprite
         self.level = level  # 건물의 레벨
         self.is_upgrading = is_upgrading  # 현재 업그레이드 중 여부
         self.left_time = left_time  # 업그레이드 남은 시간
-        self.is_earthquake = False  # 지진이 지나갔는지 여부
+        self.is_earthquake = is_earthquake  # 지진이 지나갔는지 여부
         self.graduates = 0  # 졸업생 수(학교에서 사용)
 
         self.money = 0  # 건물의 돈
@@ -86,26 +85,26 @@ class Building(metaclass=ABCMeta):
 
 # 마을 회관 건물
 class TownCenter(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('마을 회관', map_pos, 'town_center', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('마을 회관', map_pos, 'town_center', level, is_upgrading, left_time, is_earthquake)
 
 
 # 집 건물
 class House(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('집', map_pos, 'house', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('집', map_pos, 'house', level, is_upgrading, left_time, is_earthquake)
 
 
 # 병원 건물
 class Hospital(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('병원', map_pos, 'hospital', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('병원', map_pos, 'hospital', level, is_upgrading, left_time, is_earthquake)
 
 
 # 학교 건물
 class School(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('학교', map_pos, 'school', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('학교', map_pos, 'school', level, is_upgrading, left_time, is_earthquake)
         self.passed_seconds = 0  # 졸업시킬 시간을 정하기 위한 시간 경과 확인 변수
         self.graduates = 0  # 졸업생 수
 
@@ -120,14 +119,14 @@ class School(Building):
 
 # 도서관 건물
 class Library(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('도서관', map_pos, 'library', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('도서관', map_pos, 'library', level, is_upgrading, left_time, is_earthquake)
 
 
 # 가게 건물
 class Shop(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('붕어빵 가게', map_pos, 'shop', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('붕어빵 가게', map_pos, 'shop', level, is_upgrading, left_time, is_earthquake)
         self.money = 0
         self.passed_seconds = 0
 
@@ -138,8 +137,8 @@ class Shop(Building):
 
 # 붕어빵 스타디움 건물
 class Stadium(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('붕어빵 스타디움', map_pos, 'stadium', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('붕어빵 스타디움', map_pos, 'stadium', level, is_upgrading, left_time, is_earthquake)
         self.money = 0
         self.passed_seconds = 0
 
@@ -151,14 +150,14 @@ class Stadium(Building):
 
 # 공원 건물
 class Park(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('공원', map_pos, 'park', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('공원', map_pos, 'park', level, is_upgrading, left_time, is_earthquake)
 
 
 # 기상청 건물
 class WeatherCenter(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('기상청', map_pos, 'weather_center', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('기상청', map_pos, 'weather_center', level, is_upgrading, left_time, is_earthquake)
 
 
 # 연구소 건물
@@ -167,8 +166,8 @@ class Laboratory(Building):
     is_research_in_progress = False
     research_time_left = 0
 
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('연구소', map_pos, 'laboratory', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('연구소', map_pos, 'laboratory', level, is_upgrading, left_time, is_earthquake)
 
     def start_research(self):  # 연구소에서 연구를 시작
         Laboratory.is_research_in_progress = True
@@ -188,8 +187,8 @@ class Laboratory(Building):
 class Factory(Building):
     product_count = 0
 
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('공장', map_pos, 'factory', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('공장', map_pos, 'factory', level, is_upgrading, left_time, is_earthquake)
         self.is_production_in_progress = False  # 생산은 공장별로 되므로 인스턴스 변수이다.
         self.production_time_left = 0
 
@@ -209,11 +208,11 @@ class Factory(Building):
 
 # 일자리 센터
 class WorkCenter(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('일자리 센터', map_pos, 'work_center', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('일자리 센터', map_pos, 'work_center', level, is_upgrading, left_time, is_earthquake)
 
 
 # 예술의 전당
 class ArtCenter(Building):
-    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0):
-        super().__init__('예술의 전당', map_pos, 'art_center', level, is_upgrading, left_time)
+    def __init__(self, map_pos, level=1, is_upgrading=True, left_time=0, is_earthquake=False):
+        super().__init__('예술의 전당', map_pos, 'art_center', level, is_upgrading, left_time, is_earthquake)

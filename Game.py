@@ -1,8 +1,10 @@
 import pygame
 import Town
+import Building
 import MapSprites
 import InGameMode
 import Mission
+import pickle
 clock = pygame.time.Clock()
 
 #  화면 중심, 화면 배율 위치 리스트. 화살표를 통해 화면 중심, 배율이 이 값들 사이에서 이동한다.
@@ -17,7 +19,8 @@ SCREEN_HEIGHT = 720
 # 로고, 새 게임 버튼
 logo_image = pygame.image.load('image/logo.png')
 new_game_button_image = pygame.image.load('image/new_game_button.png')
-new_game_button_image_larger = pygame.transform.smoothscale_by(new_game_button_image, 1.3)
+
+bring_button_image = pygame.image.load('image/bring_button.png')
 
 
 # 게임 관리와 화면 출력 관련된 것을 담당하는 클래스이다.
@@ -30,6 +33,8 @@ class Game:
         self.mission_success_cnt = None
         self.mission_button_rect = None
         self.mission_button_image = None
+        self.save_button_image = None
+        self.save_button_rect = None
         self.tile_sprite_group = None
         self.building_sprite_group = None
         self.data_sprite_list = None
@@ -71,7 +76,7 @@ class Game:
         # 각종 스프라이트, 이미지 설정하고 위치 조정 등
         self.setup_map_sprites()
         self.setup_data()
-        self.setup_mission_button()
+        self.setup_menu_buttons()
         self.setup_missions()
         self.setup_cat()
 
@@ -92,7 +97,7 @@ class Game:
 
             self.render_map_sprites()
             self.render_data()
-            self.render_mission_button()
+            self.render_menu()
 
             self.render_cat()
 
@@ -110,12 +115,16 @@ class Game:
     def main_menu(self):
         logo_pos = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4)
         new_game_button_pos = (SCREEN_WIDTH // 2, SCREEN_HEIGHT * 3 // 4)
+        bring_button_pos = (SCREEN_WIDTH // 2, SCREEN_HEIGHT * 3 // 4 - 100)
 
         logo_rect = logo_image.get_rect()  # 로고
         logo_rect.center = logo_pos
 
         new_game_button_rect = new_game_button_image.get_rect()  # 새로운 게임 버튼
         new_game_button_rect.center = new_game_button_pos
+
+        bring_button_rect = bring_button_image.get_rect()
+        bring_button_rect.center = bring_button_pos
 
         while self.running:
             for event in pygame.event.get():
@@ -125,12 +134,21 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     if new_game_button_rect.collidepoint(*mouse_pos):  # 새 게임 누르면 해당 메서드(시작 화면 종료)
+                        self.town = Town.Town([Building.TownCenter((0, 0), is_upgrading=False),
+                                               Building.School((2, 0), is_upgrading=False, is_earthquake=True),
+                                               Building.Shop((1, 0), is_upgrading=False)],
+                                              population=20, money=200)
                         return
-                    pass
+
+                    if bring_button_rect.collidepoint(*mouse_pos):
+                        with open('saved.obj', 'rb') as file:
+                            self.town = pickle.load(file)
+                        return
 
             self.screen.fill('white')
             self.screen.blit(logo_image, logo_rect)
             self.screen.blit(new_game_button_image, new_game_button_rect)
+            self.screen.blit(bring_button_image, bring_button_rect)
 
             pygame.display.flip()
 
@@ -261,14 +279,18 @@ class Game:
             data_sprite.update()
             data_sprite.draw(self.screen)
     
-    # 미션 화면으로 넘어가는 버튼을 셋업
-    def setup_mission_button(self):
+    # 미션 화면으로 넘어가는 버튼, 저장 버튼 등 메뉴 셋업
+    def setup_menu_buttons(self):
         self.mission_button_image = pygame.image.load('./image/buttons/mission.png')
         self.mission_button_rect = self.mission_button_image.get_rect(midleft=(260, 75))
+
+        self.save_button_image = pygame.image.load('./image/buttons/save.png')
+        self.save_button_rect = self.mission_button_image.get_rect(midleft=(260, 165))
     
-    # 미션 버튼 렌더링
-    def render_mission_button(self):
+    # 메뉴 렌더링
+    def render_menu(self):
         self.screen.blit(self.mission_button_image, self.mission_button_rect)
+        self.screen.blit(self.save_button_image, self.save_button_rect)
     
     # Mission 파일에 있는 미션 목록으로부터 미션들을 생성해서 저장
     def setup_missions(self):

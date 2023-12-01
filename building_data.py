@@ -79,7 +79,6 @@ data = {
         'total_happiness': [2000],
         'research_time': 30,
         'research_price': 1000,
-        'research_probability': 0.5,
     },
     'factory': {
         'class_name': 'Factory',
