@@ -66,6 +66,7 @@ class Game:
 
     # 메인 게임 (마을 운영)을 실행시키는 메서드
     def main_game(self):
+        # 음악 재생
         mixer = pygame.mixer.Sound('./music.mp3')
         mixer.play(-1)
 
