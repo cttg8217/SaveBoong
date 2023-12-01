@@ -44,21 +44,11 @@ class Town:
         self.is_research_done = False
 
     def update_second(self):
-        updated_laboratory = False
-        updated_factory = False
         for building in self.building_list:
-            if isinstance(building, Building.Laboratory):
-                if not updated_laboratory:
-                    updated_laboratory = True
-                else:
-                    continue
-
-            if isinstance(building, Building.Factory):
-                if not updated_factory:
-                    updated_factory = True
-                else:
-                    continue
             building.update_second()
+
+        if Building.Laboratory.is_research_in_progress:
+            Building.Laboratory.research_second()
 
         if not self.is_research_done and Building.Laboratory.is_research_done:
             self.is_research_done = True
@@ -77,6 +67,9 @@ class Town:
 
             self.money += building.money * self.productivity
             building.money = 0
+
+            self.boong += building.boong
+            building.boong = 0
 
             self.graduates += building.graduates
             building.graduates = 0
@@ -162,7 +155,7 @@ class Town:
             self.popup_list.append('earthquake_safe')
 
     def upgrade_building(self, building):
-        self.money -= building.data['upgrade_price'][building.level-1]
+        self.money -= building.data['upgrade_price'][building.level]
         building.set_upgrade(self.build_speed)
 
     def repair_building(self, building):

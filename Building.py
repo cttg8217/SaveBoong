@@ -153,7 +153,8 @@ class Laboratory(Building):
         Laboratory.is_research_in_progress = True
         Laboratory.research_time_left = self.data['research_time']
 
-    def action_second(self):
+    @staticmethod
+    def research_second():
         if Laboratory.is_research_in_progress:
             Laboratory.research_time_left -= 1
 
