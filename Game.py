@@ -145,7 +145,7 @@ class Game:
                             self.town = pickle.load(file)
                         return
 
-            self.screen.fill('white')
+            self.screen.fill('#9DE19F')
             self.screen.blit(logo_image, logo_rect)
             self.screen.blit(new_game_button_image, new_game_button_rect)
             self.screen.blit(bring_button_image, bring_button_rect)
